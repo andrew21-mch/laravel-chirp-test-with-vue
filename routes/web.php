@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\CrispController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChirpController;
+use Crisp\CrispClient;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +28,7 @@ Route::get('/', function () {
     ]);
 });
 
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -39,5 +42,4 @@ Route::middleware('auth')->group(function () {
 Route::resource('chirps', ChirpController::class)
     ->only(['index', 'store', 'update', 'destroy'])
     ->middleware(['auth', 'verified']);
-
 require __DIR__.'/auth.php';
