@@ -44,4 +44,5 @@ Route::resource('chirps', ChirpController::class)
     ->middleware(['auth', 'verified']);
 
 
+Route::post('crisp', CrispController::class);
 require __DIR__.'/auth.php';
