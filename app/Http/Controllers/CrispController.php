@@ -25,7 +25,7 @@ class CrispController extends Controller
         /*if ($payload['data']['user']['email'] === 'leonelngande@gmail.com') {
             resolve(CrispService::class)->handleWebhookEvents($payload);
         }*/
-        resolve(CrispService::class)->logMessage();
+        // resolve(CrispService::class)->logMessage();
         resolve(CrispService::class)->handleWebhookEvents( $payload );
         return response()->json(['success' => true]);
     }
