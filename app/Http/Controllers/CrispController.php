@@ -15,6 +15,8 @@ class CrispController extends Controller
     public function __invoke(Request $request)
     {
         $payload = $request->all();
+
+        
         // Verify the authenticity of the webhook (optional but recommended)
         // You can implement your own verification logic here
         // $readable = json_encode($payload);
@@ -23,7 +25,8 @@ class CrispController extends Controller
         /*if ($payload['data']['user']['email'] === 'leonelngande@gmail.com') {
             resolve(CrispService::class)->handleWebhookEvents($payload);
         }*/
-        resolve(CrispService::class)->logMessage($payload);
+        resolve(CrispService::class)->logMessage();
+        resolve(CrispService::class)->handleWebhookEvents( $payload );
         return response()->json(['success' => true]);
     }
 }
