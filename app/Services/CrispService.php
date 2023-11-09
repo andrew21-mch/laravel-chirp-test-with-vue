@@ -205,13 +205,9 @@ class CrispService
         foreach ($teamMembers as $teamMember) {
             $operatorId = $teamMember['id'];
 
-            // Check the availability status (you might need to refine this logic)
-            $isAvailable = $teamMember['availability'] === 'online';
 
-            // Notify the operator if they are available
-            if ($isAvailable) {
-                $this->notifyOperator($operatorId, $sessionId, $websiteId);
-            }
+            $this->notifyOperator($operatorId, $sessionId, $websiteId);
+
         }
     }
 
