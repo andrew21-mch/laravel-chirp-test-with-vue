@@ -75,7 +75,6 @@ class CrispService
             $content = $input["data"]["content"]; // for text messages
 
             $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
-            $this->logMessage();
         }
     }
 
@@ -124,7 +123,7 @@ class CrispService
             }
         } else {
             // The user's input is not in the options list, so ask them to select a valid option.
-            $menuMessage = "Invalid option. Please select a valid option from the menu:\n";
+            $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
             foreach ($options as $key => $description) {
                 $menuMessage .= "$key. $description\n";
             }
