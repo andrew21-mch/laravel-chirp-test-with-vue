@@ -75,7 +75,7 @@ class CrispService
             $content = $input["data"]["content"]; // for text messages
 
             $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
-
+            $this->logMessage();
         }
     }
 
