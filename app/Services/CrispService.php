@@ -5,7 +5,6 @@ namespace App\Services;
 use Crisp\CrispClient;
 use Crisp\CrispException;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Log;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -92,76 +91,45 @@ class CrispService
             '6' => 'Talk to an Agent',
         ];
 
-        try {
-            $this->simulateTyping($sessionId, $websiteId);
+        // Check if the user's last message is in the options list.
+        if (array_key_exists($message, $options)) {
+            $selectedOption = $message;
 
-            // Check if the user's last message is in the options list.
-            if (array_key_exists($message, $options)) {
-                $selectedOption = $message;
-
-                // Handle the selected option.
-                switch ($selectedOption) {
-                    case '1':
-                        // Handle "Report a bug"
-                        $this->handleBugReport($sessionId, $websiteId);
-                        break;
-                    case '2':
-                        // Handle "Report airtime not received"
-                        $this->reportAirtimeNotReceived($sessionId, $websiteId);
-                        break;
-                    case '3':
-                        // Handle "Check balance"
-                        $this->checkBalance($sessionId, $websiteId);
-                        break;
-                    case '4':
-                        // Handle "Purchase airtime"
-                        $this->purchaseAirtime($sessionId, $websiteId);
-                        break;
-                    case '5':
-                        // Handle "View transactions"
-                        $this->viewTransactions($sessionId, $websiteId);
-                        break;
-                    case '6':
-                        // Handle "Talk to an Agent" (You can implement a mechanism to route to live agent support)
-                        $this->talkToAgent($sessionId, $websiteId);
-                        break;
-                }
-            } else {
-                // The user's input is not in the options list, so ask them to select a valid option.
-                $menuMessage = "Invalid option. Please select a valid option from the menu:\n";
-                foreach ($options as $key => $description) {
-                    $menuMessage .= "$key. $description\n";
-                }
-                $this->sendMessage($menuMessage, $sessionId, $websiteId);
+            // Handle the selected option.
+            switch ($selectedOption) {
+                case '1':
+                    // Handle "Report a bug"
+                    $this->handleBugReport($sessionId, $websiteId);
+                    break;
+                case '2':
+                    // Handle "Report airtime not received"
+                    $this->reportAirtimeNotReceived($sessionId, $websiteId);
+                    break;
+                case '3':
+                    // Handle "Check balance"
+                    $this->checkBalance($sessionId, $websiteId);
+                    break;
+                case '4':
+                    // Handle "Purchase airtime"
+                    $this->purchaseAirtime($sessionId, $websiteId);
+                    break;
+                case '5':
+                    // Handle "View transactions"
+                    $this->viewTransactions($sessionId, $websiteId);
+                    break;
+                case '6':
+                    // Handle "Talk to an Agent" (You can implement a mechanism to route to live agent support)
+                    $this->talkToAgent($sessionId, $websiteId);
+                    break;
             }
-
-            // If the user provides additional details, send those details as a response.
-            $this->sendUserResponse($message, $sessionId, $websiteId);
-        } catch (\Exception $e) {
-            // Log the exception for debugging
-            Log::error("Exception occurred: " . $e->getMessage());
+        } else {
+            // The user's input is not in the options list, so ask them to select a valid option.
+            $menuMessage = "Invalid option. Please select a valid option from the menu:\n";
+            foreach ($options as $key => $description) {
+                $menuMessage .= "$key. $description\n";
+            }
+            $this->sendMessage($menuMessage, $sessionId, $websiteId);
         }
-    }
-
-    private function simulateTyping(string $sessionId, string $websiteId): void
-    {
-        // Send a typing indicator message
-        $typingIndicator = [
-            "content" => "typing",
-            "type" => "system",
-            "from" => "operator",
-        ];
-        $this->sendMessage($typingIndicator, $sessionId, $websiteId);
-    }
-
-    // Helper function to send the user's response as a message
-    private function sendUserResponse(string $message, string $sessionId, string $websiteId): void
-    {
-        // You can customize the response message format as needed.
-        $responseMessage = "You said: $message"; // This includes the user's response.
-
-        // Send the response message
-        $this->sendMessage($responseMessage, $sessionId, $websiteId);
     }
 
 
@@ -184,7 +152,6 @@ class CrispService
         // You can call the relevant services or APIs here
         $this->sendMessage("Your current balance is 100 FCFA.", $sessionId, $websiteId);
     }
-
 
     private function purchaseAirtime($sessionId, $websiteId): void
     {
