@@ -129,7 +129,6 @@ class CrispService
                 $menuMessage .= "$key. $description\n";
             }
             $this->sendMessage($menuMessage, $sessionId, $websiteId);
-            $this->logMessage();
         }
     }
 
@@ -187,13 +186,6 @@ class CrispService
                 $this->logger->info("Last Message: {$conversation['last_message']}");
                 // Add more conversation details as needed
                 $this->logger->info('---'); // Separator for readability
-
-                $this->viewTransactions($conversation["session_id"], $this->websiteId);
-
-                // Check if the user's last message is "start"
-                if (strtolower($conversation['last_message']['content']) === 'start') {
-                    event(new UserStartedChat($conversation['id']));
-                }
             }
         } else {
             // No conversations found
