@@ -91,16 +91,11 @@ class CrispService
             '6' => 'Talk to an Agent',
         ];
 
-        // Send a message to the user with the available options.
-        $menuMessage = "Please select an option by typing the corresponding number:\n";
-        foreach ($options as $key => $description) {
-            $menuMessage .= "$key. $description\n";
-        }
-        $this->sendMessage($menuMessage, $sessionId, $websiteId);
-
-        // Capture the user's response (e.g., the selected option) and process it.
+        // Check if the user's last message is in the options list.
         if (array_key_exists($message, $options)) {
             $selectedOption = $message;
+
+            // Handle the selected option.
             switch ($selectedOption) {
                 case '1':
                     // Handle "Report a bug"
@@ -126,16 +121,17 @@ class CrispService
                     // Handle "Talk to an Agent" (You can implement a mechanism to route to live agent support)
                     $this->talkToAgent($sessionId, $websiteId);
                     break;
-                default:
-                    // Handle invalid option
-                    $this->sendMessage("Invalid option. Please select a valid option from the menu.", $sessionId, $websiteId);
-                    break;
             }
         } else {
-            // Handle invalid input
-            $this->sendMessage("Invalid input. Please select a valid option from the menu.", $sessionId, $websiteId);
+            // The user's input is not in the options list, so ask them to select a valid option.
+            $menuMessage = "Invalid option. Please select a valid option from the menu:\n";
+            foreach ($options as $key => $description) {
+                $menuMessage .= "$key. $description\n";
+            }
+            $this->sendMessage($menuMessage, $sessionId, $websiteId);
         }
     }
+
 
 
     private function handleBugReport(string $sessionId, string $websiteId): void
