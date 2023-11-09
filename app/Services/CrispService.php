@@ -96,7 +96,7 @@ class CrispService
             $this->simulateTyping($sessionId, $websiteId);
 
             // Handle the selected option with a slight delay (simulating typing).
-            usleep(1500000); // Simulate typing for 1.5 seconds (adjust as needed).
+            usleep(100000); // Simulate typing for 1.5 seconds (adjust as needed).
 
             // Check if the user's last message is in the options list.
             if (array_key_exists($message, $options)) {
