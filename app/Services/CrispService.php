@@ -193,4 +193,42 @@ class CrispService
 
 
     }
+
+    private function checkOperatorAvailability(string $sessionId, string $websiteId): void
+    {
+        // Fetch the list of team members using the Crisp API
+        $teamMembers = $this->crispClient->websiteOperators->getList($websiteId);
+
+        // Check each team member's availability
+        foreach ($teamMembers as $teamMember) {
+            $operatorId = $teamMember['id'];
+
+            // Check the availability status (you might need to refine this logic)
+            $isAvailable = $teamMember['availability'] === 'online';
+
+            // Notify the operator if they are available
+            if ($isAvailable) {
+                $this->notifyOperator($operatorId, $sessionId, $websiteId);
+            }
+        }
+    }
+
+    private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
+    {
+        // Implement the logic to notify a specific operator
+        // You can send a message to the operator using their ID
+        $operatorMessage = "A user has requested to talk to you. Please assist them.";
+
+        // Use the Crisp API to send a message to the specific operator
+        $this->crispClient->websiteConversations->sendMessage($websiteId, $sessionId, [
+            "content" => $operatorMessage,
+            "type" => "text",
+            "from" => "operator",
+            "origin" => "chat",
+            "to" => $operatorId,
+            // Include the operatorId as the recipient
+        ]);
+    }
+
+
 }
