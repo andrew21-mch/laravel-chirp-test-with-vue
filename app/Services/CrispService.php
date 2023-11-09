@@ -129,6 +129,7 @@ class CrispService
                 $menuMessage .= "$key. $description\n";
             }
             $this->sendMessage($menuMessage, $sessionId, $websiteId);
+            $this->logMessage();
         }
     }
 
