@@ -130,7 +130,21 @@ class CrispService
             }
             $this->sendMessage($menuMessage, $sessionId, $websiteId);
         }
+
+        // If the user provides additional details, send those details as a response.
+        $this->sendUserResponse($message, $sessionId, $websiteId);
     }
+
+    // Helper function to send the user's response as a message
+    private function sendUserResponse(string $message, string $sessionId, string $websiteId): void
+    {
+        // You can customize the response message format as needed.
+        $responseMessage = "You said: $message"; // This includes the user's response.
+
+        // Send the response message
+        $this->sendMessage($responseMessage, $sessionId, $websiteId);
+    }
+
 
 
 
