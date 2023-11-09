@@ -91,6 +91,12 @@ class CrispService
             '6' => 'Talk to an Agent',
         ];
 
+        $this->simulateTyping($sessionId, $websiteId);
+
+        // Handle the selected option with a slight delay (simulating typing).
+        usleep(1500000); // Simulate typing for 1.5 seconds (adjust as needed).
+
+
         // Check if the user's last message is in the options list.
         if (array_key_exists($message, $options)) {
             $selectedOption = $message;
@@ -135,6 +141,17 @@ class CrispService
         $this->sendUserResponse($message, $sessionId, $websiteId);
     }
 
+
+    private function simulateTyping(string $sessionId, string $websiteId): void
+    {
+        // Send a typing indicator message
+        $typingIndicator = [
+            "content" => "typing",
+            "type" => "system",
+            "from" => "operator",
+        ];
+        $this->sendMessage($typingIndicator, $sessionId, $websiteId);
+    }
     // Helper function to send the user's response as a message
     private function sendUserResponse(string $message, string $sessionId, string $websiteId): void
     {
@@ -166,6 +183,7 @@ class CrispService
         // You can call the relevant services or APIs here
         $this->sendMessage("Your current balance is 100 FCFA.", $sessionId, $websiteId);
     }
+
 
     private function purchaseAirtime($sessionId, $websiteId): void
     {
