@@ -218,6 +218,7 @@ class CrispService
         $operatorMessage = "Hi $name, A user has requested to talk to you. Please assist them.";
 
         // Use the Crisp API to send a message to the specific operator
+      
         $this->crispClient->websiteConversations->sendMessage($websiteId, $sessionId, [
             "content" => $operatorMessage,
             "type" => "text",
@@ -226,6 +227,27 @@ class CrispService
             "to" => $operatorId,
             // Include the operatorId as the recipient
         ]);
+    }
+
+    private function viewAllUsers(string $sessionId, string $websiteId): void
+    {
+        // Get all users from the database
+        $users = User::all();
+
+        // Check if there are users
+        if ($users->isEmpty()) {
+            $this->sendMessage("No users found.", $sessionId, $websiteId);
+            return;
+        }
+
+        // Build a message with user names and emails
+        $userMessage = "List of all users:\n";
+        foreach ($users as $user) {
+            $userMessage .= "Name: {$user->name}, Email: {$user->email}\n";
+        }
+
+        // Send the message to the user
+        $this->sendMessage($userMessage, $sessionId, $websiteId);
     }
 
 
