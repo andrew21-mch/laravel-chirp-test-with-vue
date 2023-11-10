@@ -23,15 +23,11 @@ class CrispService
         $this->crispClient->setTier('plugin');
         $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
 
-        // Initialize the logger property here
         $this->logger = new Logger('crisp-service');
-        $this->logger->pushHandler(new StreamHandler('php://stdout', Logger::INFO));
+        $this->logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
+        
     }
 
-    /**
-     * @throws CrispException
-     * @throws ClientExceptionInterface
-     */
     public function createConversation(string $message, string $email, ?string $nickname = null): void
     {
         $conversation = $this->crispClient->websiteConversations->create($this->websiteId);
@@ -175,26 +171,7 @@ class CrispService
         $this->checkOperatorAvailability($sessionId, $websiteId);
     }
 
-    public function logMessage(): void
-    {
-        // Get a list of conversations from Crisp
-        $conversations = $this->crispClient->websiteConversations->getList($this->websiteId, 1);
-
-        // Check if there are conversations
-        if (count($conversations) > 0) {
-            foreach ($conversations as $conversation) {
-                // Log details of each conversation
-                $this->logger->info("Last Message: {$conversation['last_message']}");
-                // Add more conversation details as needed
-                $this->logger->info('---'); // Separator for readability
-            }
-        } else {
-            // No conversations found
-            $this->logger->info('No conversations found in Crisp.');
-        }
-
-
-    }
+    
 
     private function checkOperatorAvailability(string $sessionId, string $websiteId): void
     {
@@ -205,11 +182,13 @@ class CrispService
         // Check each team member's availability
         foreach ($teamMembers as $teamMember) {
             $operatorId = $teamMember['id'];
-
-
+            $operatorName = $teamMember['name']; // Add this line to get the operator's name
+        
+            $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
+        
             $this->notifyOperator($operatorId, $sessionId, $websiteId);
-
         }
+        
     }
 
     private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
