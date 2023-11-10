@@ -200,21 +200,21 @@ class CrispService
             // Fetch the list of team members using the Crisp API
             $teamMembers = $this->crispClient->websiteOperators->getList($websiteId);
 
-            $this->logger->info("I am here, let's check it out!");
-            // Check each team member's availability
-            foreach ($teamMembers as $teamMember) {
-                $operatorId = $teamMember['id'];
-                $operatorName = $teamMember['name']; // Add this line to get the operator's name
+            // $this->logger->info("I am here, let's check it out!");
+            // // Check each team member's availability
+            // foreach ($teamMembers as $teamMember) {
+            //     $operatorId = $teamMember['id'];
+            //     $operatorName = $teamMember['name']; // Add this line to get the operator's name
 
-                $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
+            //     $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
 
-                $this->notifyOperator($operatorId, $sessionId, $websiteId);
-            }
+            //     $this->notifyOperator($operatorId, $sessionId, $websiteId);
+        //     }
         } catch (\Exception $e) {
             // Log error if an exception occurs during operator availability check
-            $this->logger->error("Error checking operator availability: " . $e->getMessage());
+            $this->logger->error("Error checking operator availability: " . $e->getMessage(), ["error"=> $e]);
         }
-    }
+    }}
 
     private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
     {
