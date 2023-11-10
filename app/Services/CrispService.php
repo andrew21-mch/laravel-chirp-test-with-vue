@@ -99,6 +99,7 @@ class CrispService
 
         // Find the closest matching option using Levenshtein distance.
         $minDistance = PHP_INT_MAX;
+
         foreach ($options as $key => $description) {
             $distance = levenshtein($normalizedMessage, strtolower($description));
 
@@ -115,38 +116,63 @@ class CrispService
             // Handle the selected option.
             switch ($selectedOption) {
                 case '1':
-                    // Handle "Report a bug"
                     $this->handleBugReport($sessionId, $websiteId);
                     break;
                 case '2':
-                    // Handle "Report airtime not received"
                     $this->reportAirtimeNotReceived($sessionId, $websiteId);
                     break;
                 case '3':
-                    // Handle "Check balance"
                     $this->checkBalance($sessionId, $websiteId);
                     break;
                 case '4':
-                    // Handle "Purchase airtime"
                     $this->purchaseAirtime($sessionId, $websiteId);
                     break;
                 case '5':
-                    // Handle "View transactions"
                     $this->viewTransactions($sessionId, $websiteId);
                     break;
                 case '6':
-                    // Handle "Talk to an Agent"
                     $this->talkToAgent($sessionId, $websiteId);
                     break;
             }
         } else {
-            // The user's input is not close enough to any options, so ask them to select a valid option.
-            $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
-            foreach ($options as $key => $description) {
-                $menuMessage .= "$key. $description\n";
+            // No exact match, attempt to match using keywords or phrases
+            $matchedOption = $this->matchWithKeywords($normalizedMessage, $options);
+
+            if ($matchedOption !== null) {
+                // Handle the matched option.
+                switch ($matchedOption) {
+                    // Add more cases as needed
+                }
+            } else {
+                // The user's input is not close enough to any options, so ask them to select a valid option.
+                $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
+                foreach ($options as $key => $description) {
+                    $menuMessage .= "$key. $description\n";
+                }
+                $this->sendMessage($menuMessage, $sessionId, $websiteId);
             }
-            $this->sendMessage($menuMessage, $sessionId, $websiteId);
         }
+    }
+
+    // Function to match user input with keywords or phrases
+    private function matchWithKeywords(string $input, array $options): ?string
+    {
+        $keywordsMapping = [
+            'bug' => '1',
+            'airtime' => '2',
+            'balance' => '3',
+            'purchase' => '4',
+            'view' => '5',
+            'agent' => '6',
+        ];
+
+        foreach ($keywordsMapping as $keyword => $option) {
+            if (strpos($input, $keyword) !== false) {
+                return $option;
+            }
+        }
+
+        return null;
     }
 
 
