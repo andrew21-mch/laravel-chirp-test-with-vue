@@ -99,58 +99,51 @@ class CrispService
             '5' => 'View transactions',
             '6' => 'Talk to an Agent',
         ];
-
-        // Normalize the user's input (convert to lowercase for case-insensitive comparison)
-        $normalizedMessage = strtolower(trim($message));
-
-        // Check if the user's last message is a numeric option.
-        if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-            $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
-        } else {
-            // Find the closest matching option using Levenshtein distance.
-            $selectedOption = null;
-            $minDistance = PHP_INT_MAX;
-
-            foreach ($options as $key => $description) {
-                $distance = levenshtein($normalizedMessage, strtolower($description));
-
-                if ($distance < $minDistance) {
-                    $minDistance = $distance;
-                    $selectedOption = $key;
-                }
-            }
-
-            // You can set a threshold for the minimum acceptable similarity.
-            $threshold = 10; // Adjust as needed
-
-            if ($minDistance <= $threshold) {
-                $this->handleSelectedOption($selectedOption, $sessionId, $websiteId);
+    
+        try {
+            // Normalize the user's input (convert to lowercase for case-insensitive comparison)
+            $normalizedMessage = strtolower(trim($message));
+    
+            // Check if the user's last message is a numeric option.
+            if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
+                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
             } else {
-                // No exact match or close match, ask the user to select a valid option.
-                $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
+                // Find the closest matching option using Levenshtein distance.
+                $selectedOption = null;
+                $minDistance = PHP_INT_MAX;
+    
                 foreach ($options as $key => $description) {
-                    $menuMessage .= "$key. $description\n";
+                    $distance = levenshtein($normalizedMessage, strtolower($description));
+    
+                    if ($distance < $minDistance) {
+                        $minDistance = $distance;
+                        $selectedOption = $key;
+                    }
                 }
-                $this->sendMessage($menuMessage, $sessionId, $websiteId);
+    
+                // You can set a threshold for the minimum acceptable similarity.
+                $threshold = 10; // Adjust as needed
+    
+                if ($minDistance <= $threshold) {
+                    $this->handleSelectedOption($selectedOption, $sessionId, $websiteId);
+                } else {
+                    // No exact match or close match, ask the user to select a valid option.
+                    $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
+                    foreach ($options as $key => $description) {
+                        $menuMessage .= "$key. $description\n";
+                    }
+                    $this->sendMessage($menuMessage, $sessionId, $websiteId);
+                }
             }
+        } catch (\Exception $e) {
+            // Respond with a user-friendly message including the exception details
+            $errorMessage = "Oops! Something went wrong. We're sorry, but we are still under development. Details: " . $e->getMessage();
+            $this->sendMessage($errorMessage, $sessionId, $websiteId);
         }
     }
-
-    private function matchWithOptions(string $input, array $options): ?string
-    {
-        $minSimilarity = 0.6; // Adjust as needed
-
-        foreach ($options as $key => $description) {
-            similar_text(strtolower($input), strtolower($description), $similarity);
-
-            if ($similarity >= $minSimilarity * 100) {
-                return $key;
-            }
-        }
-
-        return null;
-    }
-
+    
+    // Rest of the code...
+    
     private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId): void
     {
         // Implement the logic for handling the selected option.
@@ -224,8 +217,6 @@ class CrispService
 
         // Send the message to Crisp to tag/mention the agent
         $this->sendMessage('Give us few mins to get you connected', $sessionId, $websiteId);
-
-        $this->checkOperatorAvailability($sessionId, $websiteId);
     }
 
 
