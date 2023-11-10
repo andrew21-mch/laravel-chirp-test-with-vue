@@ -97,20 +97,21 @@ class CrispService
         // Check if the user's last message is in the options list.
         $selectedOption = null;
 
-        // Check if the input matches a numeric option
-        if (array_key_exists($normalizedMessage, $options)) {
-            $selectedOption = $normalizedMessage;
-        } else {
-            // Check if the input matches a textual option (e.g., 'report a bug' instead of '1')
-            foreach ($options as $key => $description) {
-                if (strtolower($description) === $normalizedMessage) {
-                    $selectedOption = $key;
-                    break;
-                }
+        // Find the closest matching option using Levenshtein distance.
+        $minDistance = PHP_INT_MAX;
+        foreach ($options as $key => $description) {
+            $distance = levenshtein($normalizedMessage, strtolower($description));
+
+            if ($distance < $minDistance) {
+                $minDistance = $distance;
+                $selectedOption = $key;
             }
         }
 
-        if ($selectedOption !== null) {
+        // You can set a threshold for the minimum acceptable similarity.
+        $threshold = 5; // Adjust as needed
+
+        if ($minDistance <= $threshold) {
             // Handle the selected option.
             switch ($selectedOption) {
                 case '1':
@@ -139,7 +140,7 @@ class CrispService
                     break;
             }
         } else {
-            // The user's input is not in the options list, so ask them to select a valid option.
+            // The user's input is not close enough to any options, so ask them to select a valid option.
             $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
             foreach ($options as $key => $description) {
                 $menuMessage .= "$key. $description\n";
@@ -203,7 +204,7 @@ class CrispService
             foreach ($teamMembers as $teamMember) {
                 $operatorId = $teamMember['user_id'];
                 $operatorName = $teamMember['first_name']; // Add this line to get the operator's name
-                $this->notifyOperator($operatorId, $sessionId, $websiteId, $name=$operatorName);
+                $this->notifyOperator($operatorId, $sessionId, $websiteId, $name = $operatorName);
             }
         } catch (\Exception $e) {
             // Log error if an exception occurs during operator availability check
@@ -218,7 +219,7 @@ class CrispService
         $operatorMessage = "Hi $name, A user has requested to talk to you. Please assist them.";
 
         // Use the Crisp API to send a message to the specific operator
-      
+
         $this->crispClient->websiteConversations->sendMessage($websiteId, $sessionId, [
             "content" => $operatorMessage,
             "type" => "text",
@@ -227,27 +228,6 @@ class CrispService
             "to" => $operatorId,
             // Include the operatorId as the recipient
         ]);
-    }
-
-    private function viewAllUsers(string $sessionId, string $websiteId): void
-    {
-        // Get all users from the database
-        $users = User::all();
-
-        // Check if there are users
-        if ($users->isEmpty()) {
-            $this->sendMessage("No users found.", $sessionId, $websiteId);
-            return;
-        }
-
-        // Build a message with user names and emails
-        $userMessage = "List of all users:\n";
-        foreach ($users as $user) {
-            $userMessage .= "Name: {$user->name}, Email: {$user->email}\n";
-        }
-
-        // Send the message to the user
-        $this->sendMessage($userMessage, $sessionId, $websiteId);
     }
 
 
