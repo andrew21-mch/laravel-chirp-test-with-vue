@@ -63,30 +63,41 @@ class CrispService
     }
 
     public function handleWebhookEvents(array $crispWebhookData): void
-    {
-        // $this->crispClient->setTier('plugin');
-        $input = $crispWebhookData;
-        // $input looks like this: {"website_id": "42286ab3-b29a-4fde-8538-da0ae501d825","event": "message:send","data": {"type": "text","origin": "chat","content": "Hello Crisp, this is a message from a visitor!","timestamp": 1632396148646,"fingerprint": 163239614854320,"website_id": "42286ab3-b29a-4fde-8538-da0ae501d825","session_id": "session_36ba3566-9651-4790-afc8-ffedbccc317f","from": "user","user": {"nickname": "visitor607","user_id": "session_36ba3566-9651-4790-afc8-ffedbccc317f"},"stamped": true},"timestamp": 1632396148743}
+{
+    $input = $crispWebhookData;
 
-        // Check if the event has already been processed
-        if (isset($input['processed']) && $input['processed']) {
-            return;
-        }
+    // Debugging output
+    $this->logger->debug("Webhook data received: " . json_encode($input));
 
-        if ($input["event"] == "message:send") {
-            // Mark the event as processed to prevent duplicate processing
-            $input['processed'] = true;
-
-            $websiteId = $input["data"]["website_id"];
-            $sessionId = $input["data"]["session_id"];
-            if (!in_array($input['data']['type'], ['text', 'file'])) {
-                return;
-            }
-            $content = $input["data"]["content"]; // for text messages
-
-            $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
-        }
+    if (!isset($input["event"])) {
+        $this->logger->error("Missing 'event' key in webhook data.");
+        // No valid event, return early
+        return;
     }
+
+    if ($input["event"] !== "message:send") {
+        $this->logger->error("Invalid 'event' key in webhook data.");
+        // Pass the required parameters here, or fetch them from $input as needed
+        $this->sendMessage("Error handling webhook events: Invalid 'event' key.", $input["data"]["session_id"], $input["data"]["website_id"]);
+        return;
+    }
+
+    // Continue handling the event
+    $websiteId = $input["data"]["website_id"];
+    $sessionId = $input["data"]["session_id"];
+
+    if (!in_array($input['data']['type'], ['text', 'file'])) {
+        return;
+    }
+
+    // Debugging output
+    $this->logger->debug("Processing message: " . json_encode($input));
+
+    // Process the event
+    $content = $input["data"]["content"];
+    $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
+}
+
 
     public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message): void
     {
