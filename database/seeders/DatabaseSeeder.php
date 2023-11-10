@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\ChirpSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
