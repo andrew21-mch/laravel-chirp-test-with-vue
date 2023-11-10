@@ -109,8 +109,8 @@ class CrispService
             '4' => 'Purchase airtime',
             '5' => 'View transactions',
             '6' => 'Talk to an Agent',
-            '7' => 'Check interesting chirps',
-            '8' => 'Search users',
+            '7' => 'Search users',
+            '8' => 'Check interesting chirps',
             '9' => 'Count users'
         ];
 
@@ -305,21 +305,35 @@ class CrispService
     }
 
     private function getUserInput(string $sessionId, string $websiteId): string
-    {
-        // Implement logic to get the user's input
-        // This could involve waiting for the user to send a message
-        // or using a different method based on your application's flow.
-        // For simplicity, let's assume the user's input is received as a text message.
+{
+    // Provide instructions to the user
+    $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
 
-        // Retrieve the user's message from the conversation history
+    // Send the instruction message
+    $this->sendMessage($instructionMessage, $sessionId, $websiteId);
+
+    // Initialize user input to an empty string
+    $userInput = '';
+
+    // Implement logic to wait for the user to send a message
+    while (empty($userInput)) {
+        // Retrieve the conversation history
         $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
-        $lastMessage = end($conversationHistory);
 
-        // Extract the content of the last message
-        $userInput = $lastMessage['content'] ?? '';
+        // Check if there are new messages
+        if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
+            // Extract the content of the last user message
+            $userInput = end($conversationHistory)['content'];
+        }
 
-        return trim($userInput);
+        // Add a short delay to avoid excessive API calls
+        sleep(2); // You can adjust the sleep duration as needed
     }
+
+    // Return the user's input after trimming
+    return trim($userInput);
+}
+
 
     private function getChirps(string $sessionId, string $websiteId): void
     {
