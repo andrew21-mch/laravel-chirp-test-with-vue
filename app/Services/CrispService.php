@@ -103,41 +103,36 @@ class CrispService
         // Normalize the user's input (convert to lowercase for case-insensitive comparison)
         $normalizedMessage = strtolower(trim($message));
 
-        // Check if the user's last message is in the options list.
-        $selectedOption = null;
-
-        // Find the closest matching option using a more flexible matching approach
-        $matchedOption = $this->matchWithOptions($normalizedMessage, $options);
-
-        if ($matchedOption !== null) {
-            // Handle the matched option.
-            switch ($matchedOption) {
-                case '1':
-                    $this->handleBugReport($sessionId, $websiteId);
-                    break;
-                case '2':
-                    $this->reportAirtimeNotReceived($sessionId, $websiteId);
-                    break;
-                case '3':
-                    $this->checkBalance($sessionId, $websiteId);
-                    break;
-                case '4':
-                    $this->purchaseAirtime($sessionId, $websiteId);
-                    break;
-                case '5':
-                    $this->viewTransactions($sessionId, $websiteId);
-                    break;
-                case '6':
-                    $this->talkToAgent($sessionId, $websiteId);
-                    break;
-            }
+        // Check if the user's last message is a numeric option.
+        if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
+            $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
         } else {
-            // The user's input is not close enough to any options, so ask them to select a valid option.
-            $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
+            // Find the closest matching option using Levenshtein distance.
+            $selectedOption = null;
+            $minDistance = PHP_INT_MAX;
+
             foreach ($options as $key => $description) {
-                $menuMessage .= "$key. $description\n";
+                $distance = levenshtein($normalizedMessage, strtolower($description));
+
+                if ($distance < $minDistance) {
+                    $minDistance = $distance;
+                    $selectedOption = $key;
+                }
             }
-            $this->sendMessage($menuMessage, $sessionId, $websiteId);
+
+            // You can set a threshold for the minimum acceptable similarity.
+            $threshold = 10; // Adjust as needed
+
+            if ($minDistance <= $threshold) {
+                $this->handleSelectedOption($selectedOption, $sessionId, $websiteId);
+            } else {
+                // No exact match or close match, ask the user to select a valid option.
+                $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
+                foreach ($options as $key => $description) {
+                    $menuMessage .= "$key. $description\n";
+                }
+                $this->sendMessage($menuMessage, $sessionId, $websiteId);
+            }
         }
     }
 
@@ -154,6 +149,38 @@ class CrispService
         }
 
         return null;
+    }
+
+    private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId): void
+    {
+        // Implement the logic for handling the selected option.
+        // You can switch on the selected option and perform the appropriate action.
+
+        switch ($selectedOption) {
+            case '1':
+                $this->handleBugReport($sessionId, $websiteId);
+                break;
+            case '2':
+                $this->reportAirtimeNotReceived($sessionId, $websiteId);
+                break;
+            case '3':
+                $this->checkBalance($sessionId, $websiteId);
+                break;
+            case '4':
+                $this->purchaseAirtime($sessionId, $websiteId);
+                break;
+            case '5':
+                $this->viewTransactions($sessionId, $websiteId);
+                break;
+            case '6':
+                $this->talkToAgent($sessionId, $websiteId);
+                break;
+            // Add more cases as needed for other options
+            default:
+                // Handle the case where the selected option is not recognized.
+                $this->sendMessage("Invalid option selected. Please try again.", $sessionId, $websiteId);
+                break;
+        }
     }
 
 
