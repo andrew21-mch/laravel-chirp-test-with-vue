@@ -119,7 +119,7 @@ class CrispService
         }
 
         // You can set a threshold for the minimum acceptable similarity.
-        $threshold = 5; // Adjust as needed
+        $threshold = 10; // Adjust as needed
 
         if ($minDistance <= $threshold) {
             // Handle the selected option.
