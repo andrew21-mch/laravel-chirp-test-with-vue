@@ -67,27 +67,27 @@ class CrispService
         // $this->crispClient->setTier('plugin');
         $input = $crispWebhookData;
         // $input looks like this: {"website_id": "42286ab3-b29a-4fde-8538-da0ae501d825","event": "message:send","data": {"type": "text","origin": "chat","content": "Hello Crisp, this is a message from a visitor!","timestamp": 1632396148646,"fingerprint": 163239614854320,"website_id": "42286ab3-b29a-4fde-8538-da0ae501d825","session_id": "session_36ba3566-9651-4790-afc8-ffedbccc317f","from": "user","user": {"nickname": "visitor607","user_id": "session_36ba3566-9651-4790-afc8-ffedbccc317f"},"stamped": true},"timestamp": 1632396148743}
-        
+
         // Check if the event has already been processed
         if (isset($input['processed']) && $input['processed']) {
             return;
         }
-    
+
         if ($input["event"] == "message:send") {
             // Mark the event as processed to prevent duplicate processing
             $input['processed'] = true;
-            
+
             $websiteId = $input["data"]["website_id"];
             $sessionId = $input["data"]["session_id"];
             if (!in_array($input['data']['type'], ['text', 'file'])) {
                 return;
             }
             $content = $input["data"]["content"]; // for text messages
-    
+
             $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
         }
     }
-    
+
     public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message): void
     {
         // Define the available options and their descriptions.
@@ -106,24 +106,12 @@ class CrispService
         // Check if the user's last message is in the options list.
         $selectedOption = null;
 
-        // Find the closest matching option using Levenshtein distance.
-        $minDistance = PHP_INT_MAX;
+        // Find the closest matching option using a more flexible matching approach
+        $matchedOption = $this->matchWithOptions($normalizedMessage, $options);
 
-        foreach ($options as $key => $description) {
-            $distance = levenshtein($normalizedMessage, strtolower($description));
-
-            if ($distance < $minDistance) {
-                $minDistance = $distance;
-                $selectedOption = $key;
-            }
-        }
-
-        // You can set a threshold for the minimum acceptable similarity.
-        $threshold = 10; // Adjust as needed
-
-        if ($minDistance <= $threshold) {
-            // Handle the selected option.
-            switch ($selectedOption) {
+        if ($matchedOption !== null) {
+            // Handle the matched option.
+            switch ($matchedOption) {
                 case '1':
                     $this->handleBugReport($sessionId, $websiteId);
                     break;
@@ -144,45 +132,30 @@ class CrispService
                     break;
             }
         } else {
-            // No exact match, attempt to match using keywords or phrases
-            $matchedOption = $this->matchWithKeywords($normalizedMessage, $options);
-
-            if ($matchedOption !== null) {
-                // Handle the matched option.
-                switch ($matchedOption) {
-                    // Add more cases as needed
-                }
-            } else {
-                // The user's input is not close enough to any options, so ask them to select a valid option.
-                $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
-                foreach ($options as $key => $description) {
-                    $menuMessage .= "$key. $description\n";
-                }
-                $this->sendMessage($menuMessage, $sessionId, $websiteId);
+            // The user's input is not close enough to any options, so ask them to select a valid option.
+            $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
+            foreach ($options as $key => $description) {
+                $menuMessage .= "$key. $description\n";
             }
+            $this->sendMessage($menuMessage, $sessionId, $websiteId);
         }
     }
 
-    // Function to match user input with keywords or phrases
-    private function matchWithKeywords(string $input, array $options): ?string
+    private function matchWithOptions(string $input, array $options): ?string
     {
-        $keywordsMapping = [
-            'bug' => '1',
-            'airtime' => '2',
-            'balance' => '3',
-            'purchase' => '4',
-            'view' => '5',
-            'agent' => '6',
-        ];
+        $minSimilarity = 0.6; // Adjust as needed
 
-        foreach ($keywordsMapping as $keyword => $option) {
-            if (strpos($input, $keyword) !== false) {
-                return $option;
+        foreach ($options as $key => $description) {
+            similar_text(strtolower($input), strtolower($description), $similarity);
+
+            if ($similarity >= $minSimilarity * 100) {
+                return $key;
             }
         }
 
         return null;
     }
+
 
 
 
