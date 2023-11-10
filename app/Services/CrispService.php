@@ -25,7 +25,7 @@ class CrispService
 
         $this->logger = new Logger('crisp-service');
         $this->logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
-        
+
     }
 
     public function createConversation(string $message, string $email, ?string $nickname = null): void
@@ -86,10 +86,26 @@ class CrispService
             '6' => 'Talk to an Agent',
         ];
 
-        // Check if the user's last message is in the options list.
-        if (array_key_exists($message, $options)) {
-            $selectedOption = $message;
+        // Normalize the user's input (convert to lowercase for case-insensitive comparison)
+        $normalizedMessage = strtolower(trim($message));
 
+        // Check if the user's last message is in the options list.
+        $selectedOption = null;
+
+        // Check if the input matches a numeric option
+        if (array_key_exists($normalizedMessage, $options)) {
+            $selectedOption = $normalizedMessage;
+        } else {
+            // Check if the input matches a textual option (e.g., 'report a bug' instead of '1')
+            foreach ($options as $key => $description) {
+                if (strtolower($description) === $normalizedMessage) {
+                    $selectedOption = $key;
+                    break;
+                }
+            }
+        }
+
+        if ($selectedOption !== null) {
             // Handle the selected option.
             switch ($selectedOption) {
                 case '1':
@@ -113,7 +129,7 @@ class CrispService
                     $this->viewTransactions($sessionId, $websiteId);
                     break;
                 case '6':
-                    // Handle "Talk to an Agent" (You can implement a mechanism to route to live agent support)
+                    // Handle "Talk to an Agent"
                     $this->talkToAgent($sessionId, $websiteId);
                     break;
             }
@@ -171,7 +187,7 @@ class CrispService
         $this->checkOperatorAvailability($sessionId, $websiteId);
     }
 
-    
+
 
     private function checkOperatorAvailability(string $sessionId, string $websiteId): void
     {
@@ -183,12 +199,12 @@ class CrispService
         foreach ($teamMembers as $teamMember) {
             $operatorId = $teamMember['id'];
             $operatorName = $teamMember['name']; // Add this line to get the operator's name
-        
+
             $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
-        
+
             $this->notifyOperator($operatorId, $sessionId, $websiteId);
         }
-        
+
     }
 
     private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
