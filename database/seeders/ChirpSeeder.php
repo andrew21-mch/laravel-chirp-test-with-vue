@@ -1,14 +1,16 @@
-<?php 
-namespace Database\Seeders;
+<?php
 
 use App\Models\Chirp;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class ChirpSeeder extends Seeder
 {
     public function run(): void
     {
+        // Disable actual email sending
+        Mail::pretend(true);
+
         $users = DB::table('users')->pluck('id');
 
         foreach ($users as $userId) {
@@ -17,6 +19,9 @@ class ChirpSeeder extends Seeder
                 'message' => $this->generateRandomMessage(),
             ]);
         }
+
+        // Re-enable email sending if needed
+        Mail::pretend(false);
     }
 
     private function generateRandomMessage(): string
