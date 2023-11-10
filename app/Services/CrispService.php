@@ -214,7 +214,7 @@ class CrispService
             // Log error if an exception occurs during operator availability check
             $this->logger->error("Error checking operator availability: " . $e->getMessage(), ["error"=> $e]);
         }
-    }}
+    }
 
     private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
     {
