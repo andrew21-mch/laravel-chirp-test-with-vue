@@ -200,27 +200,22 @@ class CrispService
             // Fetch the list of team members using the Crisp API
             $teamMembers = $this->crispClient->websiteOperators->getList($websiteId);
 
-            // $this->logger->info("I am here, let's check it out!");
-            // // Check each team member's availability
-            // foreach ($teamMembers as $teamMember) {
-            //     $operatorId = $teamMember['id'];
-            //     $operatorName = $teamMember['name']; // Add this line to get the operator's name
-
-            //     $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
-
-            //     $this->notifyOperator($operatorId, $sessionId, $websiteId);
-        //     }
+            foreach ($teamMembers as $teamMember) {
+                $operatorId = $teamMember['user_id'];
+                $operatorName = $teamMember['first_name']; // Add this line to get the operator's name
+                $this->notifyOperator($operatorId, $sessionId, $websiteId, $name=$operatorName);
+            }
         } catch (\Exception $e) {
             // Log error if an exception occurs during operator availability check
-            $this->logger->error("Error checking operator availability: " . $e->getMessage(), ["error"=> $e]);
+            $this->logger->error("Error checking operator availability: " . $e->getMessage());
         }
     }
 
-    private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
+    private function notifyOperator(string $operatorId, string $sessionId, string $websiteId, string $name): void
     {
         // Implement the logic to notify a specific operator
         // You can send a message to the operator using their ID
-        $operatorMessage = "A user has requested to talk to you. Please assist them.";
+        $operatorMessage = "Hi $name, A user has requested to talk to you. Please assist them.";
 
         // Use the Crisp API to send a message to the specific operator
         $this->crispClient->websiteConversations->sendMessage($websiteId, $sessionId, [
