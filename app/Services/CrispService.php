@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Chirp;
+use App\Models\User;
+use Carbon\Carbon;
 use Crisp\CrispClient;
 use Crisp\CrispException;
 use Illuminate\Http\Client\Response;
@@ -92,7 +95,7 @@ class CrispService
             $content = $input["data"]["content"];
             $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
         }
-        
+
     }
 
 
@@ -106,6 +109,9 @@ class CrispService
             '4' => 'Purchase airtime',
             '5' => 'View transactions',
             '6' => 'Talk to an Agent',
+            '7' => 'Check interesting chirps',
+            '8' => 'Search users',
+            '9' => 'Count users'
         ];
 
         try {
@@ -175,6 +181,15 @@ class CrispService
                 break;
             case '6':
                 $this->talkToAgent($sessionId, $websiteId);
+                break;
+            case '7':
+                $this->findUsers('noting', $sessionId, $websiteId);
+                break;
+            case '8':
+                $this->getChirps($sessionId, $websiteId);
+                break;
+            case '9':
+                $this->countUsers($sessionId, $websiteId);
                 break;
             // Add more cases as needed for other options
             default:
@@ -262,6 +277,75 @@ class CrispService
             "to" => $operatorId,
             // Include the operatorId as the recipient
         ]);
+    }
+
+    private function findUsers(string $sessionId, string $websiteId): void
+    {
+        // Ask the user for a name or email
+        $this->sendMessage("Please enter a user name or email to search:", $sessionId, $websiteId);
+
+        // Get the user's response
+        $userInput = $this->getUserInput($sessionId, $websiteId);
+
+        // Find users by name or email
+        $users = User::where('name', 'like', "%$userInput%")
+            ->orWhere('email', 'like', "%$userInput%")
+            ->get();
+
+        if ($users->isEmpty()) {
+            $message = "No users found for the search term: $userInput";
+        } else {
+            $message = "Users found:\n";
+            foreach ($users as $user) {
+                $message .= "ID: $user->id, Name: $user->name, Email: $user->email\n";
+            }
+        }
+
+        $this->sendMessage($message, $sessionId, $websiteId);
+    }
+
+    private function getUserInput(string $sessionId, string $websiteId): string
+    {
+        // Implement logic to get the user's input
+        // This could involve waiting for the user to send a message
+        // or using a different method based on your application's flow.
+        // For simplicity, let's assume the user's input is received as a text message.
+
+        // Retrieve the user's message from the conversation history
+        $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
+        $lastMessage = end($conversationHistory);
+
+        // Extract the content of the last message
+        $userInput = $lastMessage['content'] ?? '';
+
+        return trim($userInput);
+    }
+
+    private function getChirps(string $sessionId, string $websiteId): void
+    {
+        // Get chirps for the current day
+        $chirps = Chirp::whereDate('created_at', Carbon::today())->get();
+
+        if ($chirps->isEmpty()) {
+            $message = "No chirps found for today.";
+        } else {
+            $message = "Chirps for today:\n";
+            foreach ($chirps as $chirp) {
+                $message .= "ID: $chirp->id, User ID: $chirp->user_id, Message: $chirp->message\n";
+            }
+        }
+
+        $this->sendMessage($message, $sessionId, $websiteId);
+    }
+
+    private function countUsers(string $sessionId, string $websiteId): void
+    {
+        // Count all users in the database
+        $userCount = User::count();
+
+        $message = "Total number of users: $userCount";
+
+        $this->sendMessage($message, $sessionId, $websiteId);
     }
 
 
