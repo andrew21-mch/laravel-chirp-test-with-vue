@@ -118,6 +118,18 @@ class CrispService
             // Normalize the user's input (convert to lowercase for case-insensitive comparison)
             $normalizedMessage = strtolower(trim($message));
 
+            // Check for common greetings
+            $greetings = ['hello', 'hi', 'hey', 'start'];
+            $thankYouPhrases = ['thanks', 'thank you'];
+
+            if (in_array($normalizedMessage, $greetings)) {
+                $this->sendMessage("Hello! How can we assist you today?", $sessionId, $websiteId);
+                return;
+            } elseif (in_array($normalizedMessage, $thankYouPhrases)) {
+                $this->sendMessage("You're welcome! If you have more questions, feel free to ask.", $sessionId, $websiteId);
+                return;
+            }
+
             // Check if the user's last message is a numeric option.
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
                 $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
@@ -155,6 +167,7 @@ class CrispService
             $this->sendMessage($errorMessage, $sessionId, $websiteId);
         }
     }
+
 
     // Rest of the code...
 
@@ -305,34 +318,34 @@ class CrispService
     }
 
     private function getUserInput(string $sessionId, string $websiteId): string
-{
-    // Provide instructions to the user
-    $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
+    {
+        // Provide instructions to the user
+        $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
 
-    // Send the instruction message
-    $this->sendMessage($instructionMessage, $sessionId, $websiteId);
+        // Send the instruction message
+        $this->sendMessage($instructionMessage, $sessionId, $websiteId);
 
-    // Initialize user input to an empty string
-    $userInput = '';
+        // Initialize user input to an empty string
+        $userInput = '';
 
-    // Implement logic to wait for the user to send a message
-    while (empty($userInput)) {
-        // Retrieve the conversation history
-        $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
+        // Implement logic to wait for the user to send a message
+        while (empty($userInput)) {
+            // Retrieve the conversation history
+            $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
 
-        // Check if there are new messages
-        if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
-            // Extract the content of the last user message
-            $userInput = end($conversationHistory)['content'];
+            // Check if there are new messages
+            if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
+                // Extract the content of the last user message
+                $userInput = end($conversationHistory)['content'];
+            }
+
+            // Add a short delay to avoid excessive API calls
+            sleep(2); // You can adjust the sleep duration as needed
         }
 
-        // Add a short delay to avoid excessive API calls
-        sleep(2); // You can adjust the sleep duration as needed
+        // Return the user's input after trimming
+        return trim($userInput);
     }
-
-    // Return the user's input after trimming
-    return trim($userInput);
-}
 
 
     private function getChirps(string $sessionId, string $websiteId): void
