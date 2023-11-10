@@ -63,40 +63,37 @@ class CrispService
     }
 
     public function handleWebhookEvents(array $crispWebhookData): void
-{
-    $input = $crispWebhookData;
+    {
+        $input = $crispWebhookData;
 
-    // Debugging output
-    $this->logger->debug("Webhook data received: " . json_encode($input));
+        // Debugging output
+        $this->logger->debug("Webhook data received: " . json_encode($input));
 
-    if (!isset($input["event"])) {
-        $this->logger->error("Missing 'event' key in webhook data.");
-        // No valid event, return early
-        return;
+        if (!isset($input["event"])) {
+            $this->logger->error("Missing 'event' key in webhook data.");
+            // No valid event, return early
+            return;
+        }
+
+        if ($input["event"] == "message:send") {
+
+            // Continue handling the event
+            $websiteId = $input["data"]["website_id"];
+            $sessionId = $input["data"]["session_id"];
+
+            if (!in_array($input['data']['type'], ['text', 'file'])) {
+                return;
+            }
+
+            // Debugging output
+            $this->logger->debug("Processing message: " . json_encode($input));
+
+            // Process the event
+            $content = $input["data"]["content"];
+            $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
+        }
+        
     }
-
-    if ($input["event"] !== "message:send") {
-        $this->logger->error("Invalid 'event' key in webhook data.");
-        // Pass the required parameters here, or fetch them from $input as needed
-        $this->sendMessage("Error handling webhook events: Invalid 'event' key.", $input["data"]["session_id"], $input["data"]["website_id"]);
-        return;
-    }
-
-    // Continue handling the event
-    $websiteId = $input["data"]["website_id"];
-    $sessionId = $input["data"]["session_id"];
-
-    if (!in_array($input['data']['type'], ['text', 'file'])) {
-        return;
-    }
-
-    // Debugging output
-    $this->logger->debug("Processing message: " . json_encode($input));
-
-    // Process the event
-    $content = $input["data"]["content"];
-    $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
-}
 
 
     public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message): void
@@ -110,11 +107,11 @@ class CrispService
             '5' => 'View transactions',
             '6' => 'Talk to an Agent',
         ];
-    
+
         try {
             // Normalize the user's input (convert to lowercase for case-insensitive comparison)
             $normalizedMessage = strtolower(trim($message));
-    
+
             // Check if the user's last message is a numeric option.
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
                 $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
@@ -122,19 +119,19 @@ class CrispService
                 // Find the closest matching option using Levenshtein distance.
                 $selectedOption = null;
                 $minDistance = PHP_INT_MAX;
-    
+
                 foreach ($options as $key => $description) {
                     $distance = levenshtein($normalizedMessage, strtolower($description));
-    
+
                     if ($distance < $minDistance) {
                         $minDistance = $distance;
                         $selectedOption = $key;
                     }
                 }
-    
+
                 // You can set a threshold for the minimum acceptable similarity.
                 $threshold = 10; // Adjust as needed
-    
+
                 if ($minDistance <= $threshold) {
                     $this->handleSelectedOption($selectedOption, $sessionId, $websiteId);
                 } else {
@@ -152,9 +149,9 @@ class CrispService
             $this->sendMessage($errorMessage, $sessionId, $websiteId);
         }
     }
-    
+
     // Rest of the code...
-    
+
     private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId): void
     {
         // Implement the logic for handling the selected option.
