@@ -18,15 +18,20 @@ class CrispService
 
     public function __construct()
     {
-        $this->crispClient = new CrispClient();
-        $this->websiteId = config('crisp.website_id');
-        $this->crispClient->setTier('plugin');
-        $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
+        try {
+            $this->crispClient = new CrispClient();
+            $this->websiteId = config('crisp.website_id');
+            $this->crispClient->setTier('plugin');
+            $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
 
-        $this->logger = new Logger('crisp-service');
-        $this->logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
-
+            $this->logger = new Logger('crisp-service');
+            $this->logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
+        } catch (\Exception $e) {
+            // Log initialization error
+            $this->logger->error("Error initializing CrispService: " . $e->getMessage());
+        }
     }
+
 
     public function createConversation(string $message, string $email, ?string $nickname = null): void
     {
@@ -191,20 +196,24 @@ class CrispService
 
     private function checkOperatorAvailability(string $sessionId, string $websiteId): void
     {
-        // Fetch the list of team members using the Crisp API
-        $teamMembers = $this->crispClient->websiteOperators->getList($websiteId);
+        try {
+            // Fetch the list of team members using the Crisp API
+            $teamMembers = $this->crispClient->websiteOperators->getList($websiteId);
 
-        $this->logger->info("I am here, lets check it out!");
-        // Check each team member's availability
-        foreach ($teamMembers as $teamMember) {
-            $operatorId = $teamMember['id'];
-            $operatorName = $teamMember['name']; // Add this line to get the operator's name
+            $this->logger->info("I am here, let's check it out!");
+            // Check each team member's availability
+            foreach ($teamMembers as $teamMember) {
+                $operatorId = $teamMember['id'];
+                $operatorName = $teamMember['name']; // Add this line to get the operator's name
 
-            $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
+                $this->logger->debug("Checking availability for operator $operatorName (ID: $operatorId)");
 
-            $this->notifyOperator($operatorId, $sessionId, $websiteId);
+                $this->notifyOperator($operatorId, $sessionId, $websiteId);
+            }
+        } catch (\Exception $e) {
+            // Log error if an exception occurs during operator availability check
+            $this->logger->error("Error checking operator availability: " . $e->getMessage());
         }
-
     }
 
     private function notifyOperator(string $operatorId, string $sessionId, string $websiteId): void
