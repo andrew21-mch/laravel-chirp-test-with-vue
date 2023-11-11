@@ -340,9 +340,6 @@ class CrispService
             if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
                 // Extract the content of the last user message
                 $userInput = end($conversationHistory)['content'];
-                if ($userInput === 'exit' || '') {
-                    break;
-                }
             }
 
             // Add a short delay to avoid excessive API calls
