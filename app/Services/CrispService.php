@@ -196,7 +196,7 @@ class CrispService
                 $this->talkToAgent($sessionId, $websiteId);
                 break;
             case '7':
-                $this->findUsers('noting', $sessionId, $websiteId);
+                $this->findUsers($sessionId, $websiteId);
                 break;
             case '8':
                 $this->getChirps($sessionId, $websiteId);
