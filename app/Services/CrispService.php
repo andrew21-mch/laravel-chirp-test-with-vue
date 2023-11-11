@@ -124,7 +124,7 @@ class CrispService
             $thankYouPhrases = ['thanks', 'thank you'];
 
             if (in_array($normalizedMessage, $greetings)) {
-                $this->sendMessage("Hello! How can we assist you today?", $sessionId, $websiteId);
+                $this->sendMessage("Hello! I am your assistant, How can I assist you today?, you can start with sometihng like 'what is on our menu'", $sessionId, $websiteId);
                 return;
             } elseif (in_array($normalizedMessage, $thankYouPhrases)) {
                 $this->sendMessage("You're welcome! If you have more questions, feel free to ask.", $sessionId, $websiteId);
