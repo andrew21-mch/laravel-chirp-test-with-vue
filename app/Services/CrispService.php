@@ -111,7 +111,8 @@ class CrispService
             '6' => 'Talk to an Agent',
             '7' => 'Search users',
             '8' => 'Check interesting chirps',
-            '9' => 'Count users'
+            '9' => 'Count users',
+            '10'=> 'List users',
         ];
 
         try {
@@ -204,6 +205,8 @@ class CrispService
             case '9':
                 $this->countUsers($sessionId, $websiteId);
                 break;
+            case '10':
+                $this->listUsers($sessionId, $websiteId);
             // Add more cases as needed for other options
             default:
                 // Handle the case where the selected option is not recognized.
@@ -377,6 +380,27 @@ class CrispService
 
         $this->sendMessage($message, $sessionId, $websiteId);
     }
+
+    private function listUsers(string $sessionId, string $websiteId): void
+    {
+        // Retrieve all users from the database
+        $users = User::all();
+    
+        // Check if there are users in the database
+        if ($users->isEmpty()) {
+            $message = "No users found in the database.";
+        } else {
+            // Build a message listing all users
+            $message = "Users in the database:\n";
+            foreach ($users as $user) {
+                $message .= "ID: $user->id, Name: $user->name, Email: $user->email\n";
+            }
+        }
+    
+        // Send the message to the user
+        $this->sendMessage($message, $sessionId, $websiteId);
+    }
+    
 
 
 }
