@@ -19,6 +19,9 @@ class CrispService
     private string $websiteId;
     private Logger $logger;
 
+    private OptionMatcher $optionMatcher;
+    
+
     public function __construct()
     {
         try {
@@ -26,9 +29,11 @@ class CrispService
             $this->websiteId = config('crisp.website_id');
             $this->crispClient->setTier('plugin');
             $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
-
+            $this->optionMatcher = new OptionMatcher();
+            
             $this->logger = new Logger('crisp-service');
             $this->logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
+
         } catch (\Exception $e) {
             // Log initialization error
             $this->logger->error("Error initializing CrispService: " . $e->getMessage());
@@ -119,14 +124,26 @@ class CrispService
             $normalizedMessage = strtolower(trim($message));
 
             // Check for common greetings
-            $greetings = ['hello', 'hi', 'hey', 'start'];
-            $thankYouPhrases = ['thanks', 'thank you'];
-
-            if (in_array($normalizedMessage, $greetings)) {
+            if ($this->optionMatcher->isGreetings($normalizedMessage)) {
                 $this->sendMessage("Hello! How can we assist you today?", $sessionId, $websiteId);
                 return;
-            } elseif (in_array($normalizedMessage, $thankYouPhrases)) {
+            }
+
+            // Check for appreciation phrases
+            if ($this->optionMatcher->isAppreciation($normalizedMessage)) {
                 $this->sendMessage("You're welcome! If you have more questions, feel free to ask.", $sessionId, $websiteId);
+                return;
+            }
+
+            // Check for disappointment
+            if ($this->optionMatcher->isDisappointment($normalizedMessage)) {
+                $this->sendMessage("We're sorry to hear that. Please let us know how we can improve.", $sessionId, $websiteId);
+                return;
+            }
+
+            // Check for positive feedback
+            if ($this->optionMatcher->isPositiveFeedback($normalizedMessage)) {
+                $this->sendMessage("Thank you! We appreciate your positive feedback.", $sessionId, $websiteId);
                 return;
             }
 
@@ -135,23 +152,13 @@ class CrispService
                 $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
             } else {
                 // Find the closest matching option using Levenshtein distance.
-                $selectedOption = null;
-                $minDistance = PHP_INT_MAX;
-
-                foreach ($options as $key => $description) {
-                    $distance = levenshtein($normalizedMessage, strtolower($description));
-
-                    if ($distance < $minDistance) {
-                        $minDistance = $distance;
-                        $selectedOption = $key;
-                    }
-                }
+                $selectedOption = $this->optionMatcher->findClosestOption($normalizedMessage, $options);
 
                 // You can set a threshold for the minimum acceptable similarity.
                 $threshold = 10; // Adjust as needed
 
-                if ($minDistance <= $threshold) {
-                    $this->handleSelectedOption($selectedOption, $sessionId, $websiteId);
+                if ($selectedOption !== null && $selectedOption['distance'] <= $threshold) {
+                    $this->handleSelectedOption($selectedOption['option'], $sessionId, $websiteId);
                 } else {
                     // No exact match or close match, ask the user to select a valid option.
                     $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
