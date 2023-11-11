@@ -320,8 +320,7 @@ class CrispService
     private function getUserInput(string $sessionId, string $websiteId): string
     {
         // Provide instructions to the user
-        $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'\n";
-        $instructionMessage .= "Type 'exit' to leave the search.";
+        $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
 
         // Send the instruction message
         $this->sendMessage($instructionMessage, $sessionId, $websiteId);
@@ -330,7 +329,7 @@ class CrispService
         $userInput = '';
 
         // Implement logic to wait for the user to send a message
-        while (true) {
+        while (empty($userInput)) {
             // Retrieve the conversation history
             $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
 
@@ -338,10 +337,7 @@ class CrispService
             if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
                 // Extract the content of the last user message
                 $userInput = end($conversationHistory)['content'];
-
-                // Check if the user wants to exit the search
-                if (strtolower(trim($userInput)) === 'exit') {
-                    $this->sendMessage("Exiting user search.", $sessionId, $websiteId);
+                if ($userInput === 'exit' || '') {
                     break;
                 }
             }
@@ -353,7 +349,6 @@ class CrispService
         // Return the user's input after trimming
         return trim($userInput);
     }
-
 
 
     private function getChirps(string $sessionId, string $websiteId): void
