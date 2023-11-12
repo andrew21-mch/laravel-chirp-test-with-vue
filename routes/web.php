@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\BotManController;
 use App\Http\Controllers\CrispController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChirpController;
+use App\Http\Controllers\UploadController;
 use Crisp\CrispClient;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -45,4 +47,13 @@ Route::resource('chirps', ChirpController::class)
 
 
 Route::post('/', CrispController::class);
+
+Route::post('uploadfile', [UploadController::class, 'upload'])->name('uploads');
+Route::get('uploadfile', [UploadController::class,'file'])->name('file');
+// routes/web.php
+Route::delete('/delete-upload/{filename}',[UploadController::class, 'delete'])->name('delete.upload');
+Route::get('/galery/{id}',[UploadController::class, 'show'])->name('galery.show');
+Route::post('/botman', [BotManController::class, 'handle']);
+
+
 require __DIR__.'/auth.php';

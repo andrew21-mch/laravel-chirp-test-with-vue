@@ -7,16 +7,19 @@ use Illuminate\Http\Request;
 
 class CrispController extends Controller
 {
-    public function __construct()
+    protected $crispService;
+
+    public function __construct(CrispService $crispService)
     {
-        //
+        $this->crispService = $crispService;
     }
 
     public function __invoke(Request $request)
     {
         $payload = $request->all();
 
-        resolve(CrispService::class)->handleWebhookEvents( $payload );
+        $this->crispService->handleWebhookEvents($payload);
+
         return response()->json(['success' => true]);
     }
 }
