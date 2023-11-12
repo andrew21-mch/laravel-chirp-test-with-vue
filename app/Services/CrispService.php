@@ -14,9 +14,13 @@ class CrispService
     protected $crispClient;
     protected $botman;
 
-    public function __construct(CrispClient $crispClient)
+    public function __construct()
     {
-        $this->crispClient = $crispClient;
+        $this->crispClient = new CrispClient();
+        $this->websiteId = config('crisp.website_id');
+        $this->crispClient->setTier('plugin');
+        $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
+        
         $this->initializeBotMan();
     }
 
