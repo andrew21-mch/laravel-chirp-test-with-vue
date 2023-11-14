@@ -36,18 +36,51 @@ class CrispService
     }
 
 
-    public function createConversation(string $message, string $email, ?string $nickname = null): void
+    public function createOrFindConversation(string $message, string $email, ?string $nickname = null): void
     {
-        $conversation = $this->crispClient->websiteConversations->create($this->websiteId);
-        $sessionId = $conversation["session_id"];
-        $this->crispClient->websiteConversations->updateMeta(
-            $this->websiteId,
-            $sessionId,
-            ["email" => $email, "nickname" => $nickname]
-        );
+        // Search for an existing conversation based on email and/or nickname
+        $existingConversation = $this->findConversation($email, $nickname);
+
+        if ($existingConversation) {
+            // If an existing conversation is found, use it
+            $conversationId = $existingConversation['id'];
+        } else {
+            // If no existing conversation is found, create a new one
+            $conversation = $this->crispClient->websiteConversations->create($this->websiteId);
+            $conversationId = $conversation["session_id"];
+            $this->crispClient->websiteConversations->updateMeta(
+                $this->websiteId,
+                $conversationId,
+                ["email" => $email, "nickname" => $nickname]
+            );
+        }
+
+        // Send the message in the conversation
         $message = ["type" => "text", "from" => "user", "origin" => "email", "content" => $message];
-        $this->crispClient->websiteConversations->sendMessage($this->websiteId, $sessionId, $message);
+        $this->crispClient->websiteConversations->sendMessage($this->websiteId, $conversationId, $message);
     }
+
+    private function findConversation(string $email, ?string $nickname = null): ?array
+    {
+        // Search for an existing conversation based on email and/or nickname
+        // Implement the logic to search for a conversation based on your criteria
+        // You may need to make API calls to fetch the list of conversations and filter them
+        // based on email and nickname criteria.
+
+        // Example: Fetch all conversations for the website
+        $conversations = $this->crispClient->websiteConversations->getList($this->websiteId);
+
+        // Implement your logic to find the conversation based on email and nickname
+        foreach ($conversations as $conversation) {
+            $this->logger->info($conversation['meta']['email'] );
+            if ($conversation['meta']['email'] === $email && (!$nickname || $conversation['meta']['nickname'] === $nickname)) {
+                return $conversation;
+            }
+        }
+
+        return null; // No matching conversation found
+    }
+
 
     public function sendMessage(string|array $message, string $sessionId, ?string $websiteId = null): void
     {
