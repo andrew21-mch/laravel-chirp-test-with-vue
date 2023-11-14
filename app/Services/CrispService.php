@@ -133,7 +133,7 @@ class CrispService
 
             // Check if the user's last message is a numeric option.
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
+                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId. $crispWebhookData['data']['assigned']['user_id']);
             } else {
                 // Find the closest matching option using Levenshtein distance.
                 $selectedOption = null;
@@ -172,7 +172,7 @@ class CrispService
 
     // Rest of the code...
 
-    private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId): void
+    private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId, string $userId=null): void
     {
         // Implement the logic for handling the selected option.
         // You can switch on the selected option and perform the appropriate action.
@@ -194,7 +194,7 @@ class CrispService
                 $this->viewTransactions($sessionId, $websiteId);
                 break;
             case '6':
-                $this->talkToAgent($sessionId, $websiteId);
+                $this->talkToAgent($sessionId, $websiteId, $userId);
                 break;
             case '7':
                 $this->findUsers($sessionId, $websiteId);
@@ -251,12 +251,19 @@ class CrispService
         $this->sendMessage("Here is your transaction history...", $sessionId, $websiteId);
     }
 
-    public function talkToAgent(string $sessionId, string $websiteId)
+    public function talkToAgent(string $sessionId, string $websiteId, string $userId=ull)
     {
 
         // Send the message to Crisp to tag/mention the agent
         $this->sendMessage('Give us few mins to get you connected', $sessionId, $websiteId);
-        $this->createConversation('Hi, a user requested to talk to you', 'bot@mail.com', 'Bot', );
+
+        $params = [
+            "assigned" => [
+                "user_id" => $userId,
+            ]
+        ];
+
+        $this->crispClient->websiteConversations->assignRouting($websiteId, $sessionId, $params);
     }
 
 
