@@ -70,7 +70,7 @@ class CrispService
         $input = $crispWebhookData;
 
         // Debugging output
-        $this->logger->debug("Webhook data received: " . json_encode($input));
+        // $this->logger->debug("Webhook data received: " . json_encode($input));
 
         if (!isset($input["event"])) {
             $this->logger->error("Missing 'event' key in webhook data.");
@@ -133,10 +133,8 @@ class CrispService
 
             // Check if the user's last message is a numeric option.
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-        
-                $conversation = $this->crispClient->websiteConversations->getOne($websiteId, $sessionId);
-                $this->logger->debug('conversation_fetch'. json_encode($conversation));
-                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $conversation['assigned']['user_id']);
+;
+                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
 
             } else {
                 // Find the closest matching option using Levenshtein distance.
