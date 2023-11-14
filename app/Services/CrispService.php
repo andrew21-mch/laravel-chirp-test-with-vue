@@ -45,7 +45,7 @@ class CrispService
             $sessionId,
             ["email" => $email, "nickname" => $nickname]
         );
-        $message = ["type" => "note", "from" => "operator", "origin" => "email", "content" => $message];
+        $message = ["type" => "note", "from" => "user", "origin" => "email", "content" => $message];
         $this->crispClient->websiteConversations->sendMessage($this->websiteId, $sessionId, $message);
     }
 
