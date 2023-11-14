@@ -19,6 +19,8 @@ class CrispService
     private string $websiteId;
     private Logger $logger;
 
+    private string $userId;
+
     public function __construct()
     {
         try {
@@ -93,13 +95,14 @@ class CrispService
 
             // Process the event
             $content = $input["data"]["content"];
-            $this->handleUserInteraction($input, $sessionId, $websiteId, $content);
+            $userId = $input["data"]["user"]["user_id"];
+            $this->handleUserInteraction($input, $sessionId, $websiteId, $content, $userId);
         }
 
     }
 
 
-    public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message): void
+    public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message, $userId=null): void
     {
         // Define the available options and their descriptions.
         $options = [
@@ -133,8 +136,8 @@ class CrispService
 
             // Check if the user's last message is a numeric option.
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-;
-                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId);
+                $this->logger->debug($userId);
+                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
 
             } else {
                 // Find the closest matching option using Levenshtein distance.
@@ -154,7 +157,7 @@ class CrispService
                 $threshold = 10; // Adjust as needed
 
                 if ($minDistance <= $threshold) {
-                    $this->handleSelectedOption($selectedOption, $sessionId, $websiteId);
+                    $this->handleSelectedOption($selectedOption, $sessionId, $websiteId, $userId);
                 } else {
                     // No exact match or close match, ask the user to select a valid option.
                     $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
