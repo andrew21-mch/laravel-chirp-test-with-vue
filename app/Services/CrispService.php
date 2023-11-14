@@ -256,6 +256,8 @@ class CrispService
 
         // Send the message to Crisp to tag/mention the agent
         $this->sendMessage('Give us few mins to get you connected', $sessionId, $websiteId);
+        $this->crispClient->websiteConversations->initiateOne($websiteId, $sessionId);
+        $this->sendMessage('Hi, A user requested to talk to your, check your chats', $sessionId, $websiteId);
     }
 
 
