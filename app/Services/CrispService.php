@@ -133,9 +133,11 @@ class CrispService
 
             // Check if the user's last message is a numeric option.
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-                
-                $this->logger->debug("webhook: ". json_encode($crispWebhookData));
-                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId. $crispWebhookData['assigned']['user_id']);
+        
+                $conversation = $this->crispClient->websiteConversations->getOne($websiteId, $sessionId);
+                $this->logger->debug('conversation_fetch'. json_encode($conversation));
+                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $conversation['assigned']['user_id']);
+
             } else {
                 // Find the closest matching option using Levenshtein distance.
                 $selectedOption = null;
@@ -196,6 +198,7 @@ class CrispService
                 $this->viewTransactions($sessionId, $websiteId);
                 break;
             case '6':
+
                 $this->talkToAgent($sessionId, $websiteId, $userId);
                 break;
             case '7':
