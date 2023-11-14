@@ -261,7 +261,8 @@ class CrispService
     {
 
         // Send the message to Crisp to tag/mention the agent
-        $this->sendMessage('Give us few mins to get you connected', $sessionId, $websiteId);
+        $this->sendMessage('Give us few mins to get you connected'. $userId, $sessionId, $websiteId);
+
 
         $params = [
             "assigned" => [
