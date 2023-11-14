@@ -112,7 +112,7 @@ class CrispService
             '7' => 'Search users',
             '8' => 'Check interesting chirps',
             '9' => 'Count users',
-            '10'=> 'List users',
+            '10' => 'List users',
         ];
 
         try {
@@ -256,8 +256,7 @@ class CrispService
 
         // Send the message to Crisp to tag/mention the agent
         $this->sendMessage('Give us few mins to get you connected', $sessionId, $websiteId);
-        $this->crispClient->websiteConversations->initiateOne($websiteId, $sessionId);
-        $this->sendMessage('Hi, A user requested to talk to your, check your chats', $sessionId, $websiteId);
+        $this->createConversation('Hi, a user requested to talk to you', 'bot@mail.com', 'Bot', );
     }
 
 
@@ -384,7 +383,7 @@ class CrispService
     {
         // Retrieve all users from the database
         $users = User::all();
-    
+
         // Check if there are users in the database
         if ($users->isEmpty()) {
             $message = "No users found in the database.";
@@ -395,11 +394,11 @@ class CrispService
                 $message .= "ID: $user->id, Name: $user->name, Email: $user->email\n";
             }
         }
-    
+
         // Send the message to the user
         $this->sendMessage($message, $sessionId, $websiteId);
     }
-    
+
 
 
 }
