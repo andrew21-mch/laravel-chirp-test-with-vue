@@ -102,7 +102,7 @@ class CrispService
     }
 
 
-    public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message, $userId=null): void
+    public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message, $userId = null): void
     {
         // Define the available options and their descriptions.
         $options = [
@@ -121,6 +121,36 @@ class CrispService
         try {
             // Normalize the user's input (convert to lowercase for case-insensitive comparison)
             $normalizedMessage = strtolower(trim($message));
+
+            // use wit.ai to check message internt and log it to console
+            $accessToken = env('WIT_AI_CLIENT_ACCESS_TOKEN');
+            $witApiUrl = 'https://api.wit.ai/message';
+
+            $headers = [
+                'Authorization: Bearer ' . $accessToken,
+            ];
+            
+            $queryParams = [
+                'q' => $message,
+            ];
+            
+            // Initialize cURL session
+            $ch = curl_init($witApiUrl . '?' . http_build_query($queryParams));
+            
+            // Set cURL options
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            // Execute cURL session and get the response
+            $response = curl_exec($ch);
+            
+            // Close cURL session
+            curl_close($ch);
+            
+            // Decode the JSON response
+            $witData = json_decode($response, true);
+
+            $this->logger->debug($response);
 
             // Check for common greetings
             $greetings = ['hello', 'hi', 'hey', 'start'];
@@ -177,7 +207,7 @@ class CrispService
 
     // Rest of the code...
 
-    private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId, string $userId=null): void
+    private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId, string $userId = null): void
     {
         // Implement the logic for handling the selected option.
         // You can switch on the selected option and perform the appropriate action.
@@ -257,11 +287,11 @@ class CrispService
         $this->sendMessage("Here is your transaction history...", $sessionId, $websiteId);
     }
 
-    public function talkToAgent(string $sessionId, string $websiteId, string $userId=ull)
+    public function talkToAgent(string $sessionId, string $websiteId, string $userId = ull)
     {
 
         // Send the message to Crisp to tag/mention the agent
-        $this->sendMessage('Give us few mins to get you connected'. $userId, $sessionId, $websiteId);
+        $this->sendMessage('Give us few mins to get you connected' . $userId, $sessionId, $websiteId);
 
 
         $params = [
