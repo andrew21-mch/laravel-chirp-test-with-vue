@@ -150,18 +150,19 @@ class CrispService
             // Decode the JSON response
             $witData = json_decode($response, true);
 
-            $this->logger->debug($response);
+            $this->logger->debug($witData['intents'][0]['name']);
 
-            // Check for common greetings
-            $greetings = ['hello', 'hi', 'hey', 'start'];
-            $thankYouPhrases = ['thanks', 'thank you'];
-
-            if (in_array($normalizedMessage, $greetings)) {
-                $this->sendMessage("Hello! I am your assistant, How can I assist you today?, you can start with sometihng like 'what is on our menu'", $sessionId, $websiteId);
-                return;
-            } elseif (in_array($normalizedMessage, $thankYouPhrases)) {
-                $this->sendMessage("You're welcome! If you have more questions, feel free to ask.", $sessionId, $websiteId);
-                return;
+            if (isset($witData['intents'][0]['name'])) {
+                $intentName = $witData['intents'][0]['name'];
+            
+                // Now you can use $intentName in your logic
+                if ($intentName === 'greetings') {
+                    $this->sendMessage("Hello! I am your assistant...", $sessionId, $websiteId);
+                } elseif ($intentName === 'thanks') {
+                    $this->sendMessage("You're welcome! If you have more questions...", $sessionId, $websiteId);
+                }
+            
+                // ... handle other intents as needed
             }
 
             // Check if the user's last message is a numeric option.
