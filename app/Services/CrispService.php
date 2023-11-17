@@ -103,107 +103,118 @@ class CrispService
 
 
     public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message, $userId = null): void
-    {
-        // Define the available options and their descriptions.
-        $options = [
-            '1' => 'Report a bug',
-            '2' => 'Report airtime not received',
-            '3' => 'Check balance',
-            '4' => 'Purchase airtime',
-            '5' => 'View transactions',
-            '6' => 'Talk to an Agent',
-            '7' => 'Search users',
-            '8' => 'Check interesting chirps',
-            '9' => 'Count users',
-            '10' => 'List users',
+{
+    // Define the available options and their descriptions.
+    $options = [
+        '1' => 'Report a bug',
+        '2' => 'Report airtime not received',
+        '3' => 'Check balance',
+        '4' => 'Purchase airtime',
+        '5' => 'View transactions',
+        '6' => 'Talk to an Agent',
+        '7' => 'Search users',
+        '8' => 'Check interesting chirps',
+        '9' => 'Count users',
+        '10' => 'List users',
+    ];
+
+    try {
+        // Normalize the user's input (convert to lowercase for case-insensitive comparison)
+        $normalizedMessage = strtolower(trim($message));
+
+        // Use Wit.ai to check the message intent and log it to console
+        $accessToken = env('WIT_AI_CLIENT_ACCESS_TOKEN');
+        $witApiUrl = 'https://api.wit.ai/message';
+
+        $headers = [
+            'Authorization: Bearer ' . $accessToken,
         ];
+        
+        $queryParams = [
+            'q' => $message,
+        ];
+        
+        // Initialize cURL session
+        $ch = curl_init($witApiUrl . '?' . http_build_query($queryParams));
+        
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+        
+        // Close cURL session
+        curl_close($ch);
+        
+        // Decode the JSON response
+        $witData = json_decode($response, true);
 
-        try {
-            // Normalize the user's input (convert to lowercase for case-insensitive comparison)
-            $normalizedMessage = strtolower(trim($message));
+        $this->logger->debug($witData['intents'][0]['name']);
 
-            // use wit.ai to check message internt and log it to console
-            $accessToken = env('WIT_AI_CLIENT_ACCESS_TOKEN');
-            $witApiUrl = 'https://api.wit.ai/message';
-
-            $headers = [
-                'Authorization: Bearer ' . $accessToken,
-            ];
-            
-            $queryParams = [
-                'q' => $message,
-            ];
-            
-            // Initialize cURL session
-            $ch = curl_init($witApiUrl . '?' . http_build_query($queryParams));
-            
-            // Set cURL options
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            
-            // Execute cURL session and get the response
-            $response = curl_exec($ch);
-            
-            // Close cURL session
-            curl_close($ch);
-            
-            // Decode the JSON response
-            $witData = json_decode($response, true);
-
-            $this->logger->debug($witData['intents'][0]['name']);
-
-            if (isset($witData['intents'][0]['name'])) {
-                $intentName = $witData['intents'][0]['name'];
-            
-                // Now you can use $intentName in your logic
-                if ($intentName === 'greetings') {
-                    $this->sendMessage("Hello! I am your assistant...", $sessionId, $websiteId);
-                } elseif ($intentName === 'thanks') {
+        if (isset($witData['intents'][0]['name'])) {
+            $intentName = $witData['intents'][0]['name'];
+        
+            // Now you can use $intentName in your logic
+            switch ($intentName) {
+                case 'greetings':
+                    $this->sendMessage("Hello! I am your assistant, how may I help you?", $sessionId, $websiteId);
+                    break;
+                case 'thanks':
                     $this->sendMessage("You're welcome! If you have more questions...", $sessionId, $websiteId);
-                }
-            
-                // ... handle other intents as needed
-            }
-
-            // Check if the user's last message is a numeric option.
-            if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-                $this->logger->debug($userId);
-                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
-
-            } else {
-                // Find the closest matching option using Levenshtein distance.
-                $selectedOption = null;
-                $minDistance = PHP_INT_MAX;
-
-                foreach ($options as $key => $description) {
-                    $distance = levenshtein($normalizedMessage, strtolower($description));
-
-                    if ($distance < $minDistance) {
-                        $minDistance = $distance;
-                        $selectedOption = $key;
+                    break;
+                case 'transaction_message':
+                    $this->handleTransactionMessage($sessionId, $websiteId);
+                    break;
+                case 'inquiries':
+                    $this->handleInquiries($sessionId, $websiteId);
+                    break;
+                case 'airtime_not_received':
+                    $this->reportAirtimeNotReceived($sessionId, $websiteId);
+                    break;
+                case 'bug_report':
+                    $this->handleBugReport($sessionId, $websiteId);
+                    break;
+                case 'talk_to_agent':
+                    $this->talkToAgent($sessionId, $websiteId, $userId);
+                    break;
+                case 'check_menu':
+                    $this->sendMenu($sessionId, $websiteId, $options);
+                    break;
+                // Add more cases as needed for other intents
+                default:
+                    // Check if the user's last message is a numeric option.
+                    if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
+                        $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
+                    } else {
+                        // No recognized intent, ask the user to provide more information
+                        $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
                     }
-                }
-
-                // You can set a threshold for the minimum acceptable similarity.
-                $threshold = 10; // Adjust as needed
-
-                if ($minDistance <= $threshold) {
-                    $this->handleSelectedOption($selectedOption, $sessionId, $websiteId, $userId);
-                } else {
-                    // No exact match or close match, ask the user to select a valid option.
-                    $menuMessage = "Hello, nice to have you, please select from our menu, how may we help you! :) \n";
-                    foreach ($options as $key => $description) {
-                        $menuMessage .= "$key. $description\n";
-                    }
-                    $this->sendMessage($menuMessage, $sessionId, $websiteId);
-                }
+                    break;
             }
-        } catch (\Exception $e) {
-            // Respond with a user-friendly message including the exception details
-            $errorMessage = "Oops! Something went wrong. We're sorry, but we are still under development. Details: " . $e->getMessage();
-            $this->sendMessage($errorMessage, $sessionId, $websiteId);
+        } else {
+            // No recognized intent, ask the user to provide more information
+            $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
         }
+    } catch (\Exception $e) {
+        // Respond with a user-friendly message including the exception details
+        $errorMessage = "Oops! Something went wrong. We're sorry, but we are still under development. Details: " . $e->getMessage();
+        $this->sendMessage($errorMessage, $sessionId, $websiteId);
     }
+}
+
+// Add the following method to handle the 'check_menu' intent
+
+private function sendMenu(string $sessionId, string $websiteId, array $options): void
+{
+    // Define your menu items or send a pre-defined menu
+    $menuMessage = "Our menu:\n";
+    foreach ($options as $key => $description) {
+        $menuMessage .= "$key. $description\n";
+    }
+
+    $this->sendMessage($menuMessage, $sessionId, $websiteId);
+}
 
 
     // Rest of the code...
@@ -443,6 +454,20 @@ class CrispService
         // Send the message to the user
         $this->sendMessage($message, $sessionId, $websiteId);
     }
+    private function handleInquiries(string $sessionId, string $websiteId): void
+{
+    // Respond to inquiries with a simple message
+    $inquiryResponse = "Thank you for your inquiry! Our team will get back to you shortly.";
+    $this->sendMessage($inquiryResponse, $sessionId, $websiteId);
+}
+
+private function handleTransactionMessage(string $sessionId, string $websiteId): void
+{
+    // Replace this with your actual logic to handle transaction messages
+    $transactionResponse = "Thank you for your transaction message! We are processing your request.";
+    $this->sendMessage($transactionResponse, $sessionId, $websiteId);
+}
+
 
 
 
