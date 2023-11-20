@@ -268,8 +268,10 @@ private function sendMenu(string $sessionId, string $websiteId, array $options):
 
     private function handleBugReport(string $sessionId, string $websiteId): void
     {
-        // Implement bug reporting logic here
-        $this->sendMessage("You have selected 'Report a bug'. Please provide details about the bug.", $sessionId, $websiteId);
+        $bugReportHandler = new BugReportHandler();
+
+        // Call the handleBugReport method from BugReportHandler
+        $bugReportHandler->handleBugReport($sessionId, $websiteId);
     }
 
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
