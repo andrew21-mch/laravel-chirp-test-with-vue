@@ -294,9 +294,38 @@ class CrispService
 
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
-        // Implement airtime not received reporting logic here
-        $this->sendMessage("You have selected 'Report airtime not received'. Please provide details.", $sessionId, $websiteId);
+        // Ask the user for more details about the airtime not received issue
+        $this->sendMessage("You have selected 'Report airtime not received'. Please provide more details about the issue. Include any error messages or relevant information you received. Include the amount, transaction ID, sender's number, and receiver's number.", $sessionId, $websiteId);
+
+        // Get the user's response
+        $userDetails = $this->getUserInput($sessionId, $websiteId);
+
+        // Call the scanMessage service to check the payment with the details
+        $scanResult = $this->scanMessage($userDetails);
+
+        // Process the scanResult based on your business logic
+        if ($scanResult) {
+            // Payment details are valid, continue with your logic
+            $confirmationMessage = "Thank you for providing details about the airtime not received issue. We will investigate and get back to you shortly.";
+            $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
+        } else {
+            // Payment details are not valid, inform the user
+            $errorMessage = "The provided payment details are not valid. Please double-check and provide accurate information.";
+            $this->sendMessage($errorMessage, $sessionId, $websiteId);
+        }
     }
+
+    // Placeholder for the scanMessage service (replace this with your actual implementation)
+    private function scanMessage(string $userDetails): bool
+    {
+        // Implement your logic to scan the message and check the payment details
+        // This could involve verifying the amount, transaction ID, sender's number, and receiver's number
+        // Return true if the details are valid, false otherwise
+        // You'll need to customize this based on your business requirements
+        // Example: Your logic to validate payment details here...
+        return true;
+    }
+
 
     private function checkBalance($sessionId, $websiteId): void
     {
