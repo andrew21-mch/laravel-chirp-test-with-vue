@@ -180,7 +180,7 @@ class CrispService
                     case 'talk_to_agent':
                         $this->talkToAgent($sessionId, $websiteId, $userId);
                         break;
-                    case 'check_menu':
+                    case 'menu':
                         $this->sendMenu($sessionId, $websiteId, $options);
                         break;
                     // Add more cases as needed for other intents
