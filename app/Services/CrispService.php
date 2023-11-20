@@ -18,6 +18,8 @@ class CrispService
     private CrispClient $crispClient;
     private string $websiteId;
     private Logger $logger;
+    private const EXIT_COMMAND = 'exit';
+
 
     private string $userId;
 
@@ -103,118 +105,118 @@ class CrispService
 
 
     public function handleUserInteraction(array $crispWebhookData, string $sessionId, string $websiteId, string $message, $userId = null): void
-{
-    // Define the available options and their descriptions.
-    $options = [
-        '1' => 'Report a bug',
-        '2' => 'Report airtime not received',
-        '3' => 'Check balance',
-        '4' => 'Purchase airtime',
-        '5' => 'View transactions',
-        '6' => 'Talk to an Agent',
-        '7' => 'Search users',
-        '8' => 'Check interesting chirps',
-        '9' => 'Count users',
-        '10' => 'List users',
-    ];
-
-    try {
-        // Normalize the user's input (convert to lowercase for case-insensitive comparison)
-        $normalizedMessage = strtolower(trim($message));
-
-        // Use Wit.ai to check the message intent and log it to console
-        $accessToken = env('WIT_AI_CLIENT_ACCESS_TOKEN');
-        $witApiUrl = 'https://api.wit.ai/message';
-
-        $headers = [
-            'Authorization: Bearer ' . $accessToken,
+    {
+        // Define the available options and their descriptions.
+        $options = [
+            '1' => 'Report a bug',
+            '2' => 'Report airtime not received',
+            '3' => 'Check balance',
+            '4' => 'Purchase airtime',
+            '5' => 'View transactions',
+            '6' => 'Talk to an Agent',
+            '7' => 'Search users',
+            '8' => 'Check interesting chirps',
+            '9' => 'Count users',
+            '10' => 'List users',
         ];
-        
-        $queryParams = [
-            'q' => $message,
-        ];
-        
-        // Initialize cURL session
-        $ch = curl_init($witApiUrl . '?' . http_build_query($queryParams));
-        
-        // Set cURL options
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        
-        // Execute cURL session and get the response
-        $response = curl_exec($ch);
-        
-        // Close cURL session
-        curl_close($ch);
-        
-        // Decode the JSON response
-        $witData = json_decode($response, true);
 
-        $this->logger->debug($witData['intents'][0]['name']);
+        try {
+            // Normalize the user's input (convert to lowercase for case-insensitive comparison)
+            $normalizedMessage = strtolower(trim($message));
 
-        if (isset($witData['intents'][0]['name'])) {
-            $intentName = $witData['intents'][0]['name'];
-        
-            // Now you can use $intentName in your logic
-            switch ($intentName) {
-                case 'greetings':
-                    $this->sendMessage("Hello! I am your assistant, how may I help you?", $sessionId, $websiteId);
-                    break;
-                case 'thanks':
-                    $this->sendMessage("You're welcome! If you have more questions...", $sessionId, $websiteId);
-                    break;
-                case 'transaction_message':
-                    $this->handleTransactionMessage($sessionId, $websiteId);
-                    break;
-                case 'inquiries':
-                    $this->handleInquiries($sessionId, $websiteId);
-                    break;
-                case 'airtime_not_received':
-                    $this->reportAirtimeNotReceived($sessionId, $websiteId);
-                    break;
-                case 'bug_report':
-                    $this->handleBugReport($sessionId, $websiteId);
-                    break;
-                case 'talk_to_agent':
-                    $this->talkToAgent($sessionId, $websiteId, $userId);
-                    break;
-                case 'check_menu':
-                    $this->sendMenu($sessionId, $websiteId, $options);
-                    break;
-                // Add more cases as needed for other intents
-                default:
-                    // Check if the user's last message is a numeric option.
-                    if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-                        $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
-                    } else {
-                        // No recognized intent, ask the user to provide more information
-                        $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
-                    }
-                    break;
+            // Use Wit.ai to check the message intent and log it to console
+            $accessToken = env('WIT_AI_CLIENT_ACCESS_TOKEN');
+            $witApiUrl = 'https://api.wit.ai/message';
+
+            $headers = [
+                'Authorization: Bearer ' . $accessToken,
+            ];
+
+            $queryParams = [
+                'q' => $message,
+            ];
+
+            // Initialize cURL session
+            $ch = curl_init($witApiUrl . '?' . http_build_query($queryParams));
+
+            // Set cURL options
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            // Execute cURL session and get the response
+            $response = curl_exec($ch);
+
+            // Close cURL session
+            curl_close($ch);
+
+            // Decode the JSON response
+            $witData = json_decode($response, true);
+
+            $this->logger->debug($witData['intents'][0]['name']);
+
+            if (isset($witData['intents'][0]['name'])) {
+                $intentName = $witData['intents'][0]['name'];
+
+                // Now you can use $intentName in your logic
+                switch ($intentName) {
+                    case 'greetings':
+                        $this->sendMessage("Hello! I am your assistant, how may I help you?", $sessionId, $websiteId);
+                        break;
+                    case 'thanks':
+                        $this->sendMessage("You're welcome! If you have more questions...", $sessionId, $websiteId);
+                        break;
+                    case 'transaction_message':
+                        $this->handleTransactionMessage($sessionId, $websiteId);
+                        break;
+                    case 'inquiries':
+                        $this->handleInquiries($sessionId, $websiteId);
+                        break;
+                    case 'airtime_not_received':
+                        $this->reportAirtimeNotReceived($sessionId, $websiteId);
+                        break;
+                    case 'bug_report':
+                        $this->handleBugReport($sessionId, $websiteId);
+                        break;
+                    case 'talk_to_agent':
+                        $this->talkToAgent($sessionId, $websiteId, $userId);
+                        break;
+                    case 'check_menu':
+                        $this->sendMenu($sessionId, $websiteId, $options);
+                        break;
+                    // Add more cases as needed for other intents
+                    default:
+                        // Check if the user's last message is a numeric option.
+                        if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
+                            $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
+                        } else {
+                            // No recognized intent, ask the user to provide more information
+                            $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
+                        }
+                        break;
+                }
+            } else {
+                // No recognized intent, ask the user to provide more information
+                $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
             }
-        } else {
-            // No recognized intent, ask the user to provide more information
-            $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
+        } catch (\Exception $e) {
+            // Respond with a user-friendly message including the exception details
+            $errorMessage = "Oops! Something went wrong. We're sorry, but we are still under development. Details: " . $e->getMessage();
+            $this->sendMessage($errorMessage, $sessionId, $websiteId);
         }
-    } catch (\Exception $e) {
-        // Respond with a user-friendly message including the exception details
-        $errorMessage = "Oops! Something went wrong. We're sorry, but we are still under development. Details: " . $e->getMessage();
-        $this->sendMessage($errorMessage, $sessionId, $websiteId);
-    }
-}
-
-// Add the following method to handle the 'check_menu' intent
-
-private function sendMenu(string $sessionId, string $websiteId, array $options): void
-{
-    // Define your menu items or send a pre-defined menu
-    $menuMessage = "Our menu:\n";
-    foreach ($options as $key => $description) {
-        $menuMessage .= "$key. $description\n";
     }
 
-    $this->sendMessage($menuMessage, $sessionId, $websiteId);
-}
+    // Add the following method to handle the 'check_menu' intent
+
+    private function sendMenu(string $sessionId, string $websiteId, array $options): void
+    {
+        // Define your menu items or send a pre-defined menu
+        $menuMessage = "Our menu:\n";
+        foreach ($options as $key => $description) {
+            $menuMessage .= "$key. $description\n";
+        }
+
+        $this->sendMessage($menuMessage, $sessionId, $websiteId);
+    }
 
 
     // Rest of the code...
@@ -266,14 +268,47 @@ private function sendMenu(string $sessionId, string $websiteId, array $options):
 
 
 
-    private function handleBugReport(string $sessionId, string $websiteId): void
+    public function handleBugReport(string $sessionId, string $websiteId): void
     {
-        $bugReportHandler = new BugReportHandler();
+        $this->sendMessage("You have selected 'Report a bug'. Please provide details about the bug. You can type 'exit' to exit the bug reporting process.", $sessionId, $websiteId);
 
-        // Call the handleBugReport method from BugReportHandler
-        $bugReportHandler->handleBugReport($sessionId, $websiteId);
+        // Initialize bug report details
+        $bugDetails = [];
+
+        // Start a loop to collect bug details
+        while (true) {
+            // Get user input for bug details
+            $userInput = $this->getUserInput($sessionId, $websiteId);
+
+            // Check if the user wants to exit the bug reporting process
+            if (strtolower($userInput) === self::EXIT_COMMAND) {
+                $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
+                return;
+            }
+
+            // Add the user input to bug details
+            $bugDetails[] = $userInput;
+
+            // Ask the user for additional details or confirm submission
+            $confirmationMessage = "Bug details collected so far:\n" . implode("\n", $bugDetails) . "\n\nType 'exit' to submit the bug report or provide additional details:";
+            $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
+
+            // Wait for user response
+            $confirmation = $this->getUserInput($sessionId, $websiteId);
+
+            // Check if the user wants to exit or submit the bug report
+            if (strtolower($confirmation) === self::EXIT_COMMAND) {
+                $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
+                return;
+            } elseif (empty(trim($confirmation))) {
+                // If the user provides no input, ask for details again
+                $this->sendMessage("Please provide additional details or type 'exit' to submit the bug report:", $sessionId, $websiteId);
+            } else {
+                // Continue collecting bug details
+                $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
+            }
+        }
     }
-
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
         // Implement airtime not received reporting logic here
@@ -457,18 +492,18 @@ private function sendMenu(string $sessionId, string $websiteId, array $options):
         $this->sendMessage($message, $sessionId, $websiteId);
     }
     private function handleInquiries(string $sessionId, string $websiteId): void
-{
-    // Respond to inquiries with a simple message
-    $inquiryResponse = "Thank you for your inquiry! Our team will get back to you shortly.";
-    $this->sendMessage($inquiryResponse, $sessionId, $websiteId);
-}
+    {
+        // Respond to inquiries with a simple message
+        $inquiryResponse = "Thank you for your inquiry! Our team will get back to you shortly.";
+        $this->sendMessage($inquiryResponse, $sessionId, $websiteId);
+    }
 
-private function handleTransactionMessage(string $sessionId, string $websiteId): void
-{
-    // Replace this with your actual logic to handle transaction messages
-    $transactionResponse = "Thank you for your transaction message! We are processing your request.";
-    $this->sendMessage($transactionResponse, $sessionId, $websiteId);
-}
+    private function handleTransactionMessage(string $sessionId, string $websiteId): void
+    {
+        // Replace this with your actual logic to handle transaction messages
+        $transactionResponse = "Thank you for your transaction message! We are processing your request.";
+        $this->sendMessage($transactionResponse, $sessionId, $websiteId);
+    }
 
 
 
