@@ -275,27 +275,16 @@ class CrispService
         while (true) {
             $userInput = $this->getUserInput($sessionId, $websiteId, 'Enter details for bug please!');
 
-            if (strtolower($userInput) === self::EXIT_COMMAND) {
-                $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
-                return;
-            }
-
-            $bugDetails[] = $userInput;
-
-            $confirmationMessage = "Bug details collected so far:\n" . implode("\n", $bugDetails) . "\n\nType 'exit' to submit the bug report or provide additional details:";
-            $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
-
-            sleep(1);
-
-            $confirmation = $this->getUserInput($sessionId, $websiteId);
-
-            if (strtolower($confirmation) === self::EXIT_COMMAND) {
-                $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
-                break;
-            } elseif (empty(trim($confirmation))) {
-                $this->sendMessage("Please provide additional details or type 'exit' to submit the bug report:", $sessionId, $websiteId);
-            } else {
+            if (strtolower($userInput) == self::EXIT_COMMAND) {
                 $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
+                return;
+            } else {
+                $bugDetails[] = $userInput;
+
+                $confirmationMessage = "Bug details collected so far:\n" . implode("\n", $bugDetails) . "\n\nType 'exit' to submit the bug report or provide additional details:";
+                $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
+
+                sleep(1);
             }
         }
     }
