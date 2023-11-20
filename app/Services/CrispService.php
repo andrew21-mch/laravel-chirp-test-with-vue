@@ -297,7 +297,7 @@ class CrispService
             // Check if the user wants to exit or submit the bug report
             if (strtolower($confirmation) === self::EXIT_COMMAND) {
                 $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
-                return;
+                break;
             } elseif (empty(trim($confirmation))) {
                 // If the user provides no input, ask for details again
                 $this->sendMessage("Please provide additional details or type 'exit' to submit the bug report:", $sessionId, $websiteId);
@@ -413,40 +413,29 @@ class CrispService
         $this->sendMessage($message, $sessionId, $websiteId);
     }
 
-    /**
-     * Get user input from the conversation.
-     *
-     * @param string $sessionId   The session ID for the ongoing conversation.
-     * @param string $websiteId   The website ID or channel ID where the conversation is taking place.
-     * @return string             The user's input in the conversation.
-     */
     private function getUserInput(string $sessionId, string $websiteId): string
     {
-        $instructionMessage = "Please provide your response:";
+        $this->sendMessage("Please provide your response:", $sessionId, $websiteId);
 
-        // Send the instruction message
-        $this->sendMessage($instructionMessage, $sessionId, $websiteId);
-
-      
         $userInput = '';
 
-        // Implement logic to wait for the user to send a message
-        while (empty($userInput)) {
-            // Retrieve the conversation history
+        while (true) {
             $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
 
-            // Check if there are new messages
             if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
-                // Extract the content of the last user message
                 $userInput = end($conversationHistory)['content'];
+
+                if (strtolower($userInput) === self::EXIT_COMMAND) {
+                    break;
+                }
             }
 
-            // Add a short delay to avoid excessive API calls
             sleep(2);
         }
 
         return trim($userInput);
     }
+
 
 
 
