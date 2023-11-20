@@ -319,7 +319,7 @@ class CrispService
         $this->sendMessage("Here is your transaction history...", $sessionId, $websiteId);
     }
 
-    public function talkToAgent(string $sessionId, string $websiteId, string $userId = ull)
+    public function talkToAgent(string $sessionId, string $websiteId, string $userId = null)
     {
 
         // Send the message to Crisp to tag/mention the agent
