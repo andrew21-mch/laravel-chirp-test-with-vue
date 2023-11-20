@@ -270,28 +270,30 @@ class CrispService
 
     public function handleBugReport(string $sessionId, string $websiteId): void
     {
+        $bugDetails = [];
+
         while (true) {
             // Get user input for bug details
             $userInput = $this->getUserInput($sessionId, $websiteId);
-        
+
             // Check if the user wants to exit the bug reporting process
             if (strtolower($userInput) === self::EXIT_COMMAND) {
                 $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
                 return;
             }
-        
+
             // Add the user input to bug details
             $bugDetails[] = $userInput;
-        
+
             // Ask the user for additional details or confirm submission
             $confirmationMessage = "Bug details collected so far:\n" . implode("\n", $bugDetails) . "\n\nType 'exit' to submit the bug report or provide additional details:";
             $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
-        
+
             sleep(1); // Adjust the sleep duration as needed
-        
+
             // Wait for user response
             $confirmation = $this->getUserInput($sessionId, $websiteId);
-        
+
             // Check if the user wants to exit or submit the bug report
             if (strtolower($confirmation) === self::EXIT_COMMAND) {
                 $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
@@ -304,8 +306,8 @@ class CrispService
                 $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
             }
         }
-        
     }
+
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
         // Implement airtime not received reporting logic here
@@ -411,15 +413,21 @@ class CrispService
         $this->sendMessage($message, $sessionId, $websiteId);
     }
 
+    /**
+     * Get user input from the conversation.
+     *
+     * @param string $sessionId   The session ID for the ongoing conversation.
+     * @param string $websiteId   The website ID or channel ID where the conversation is taking place.
+     * @return string             The user's input in the conversation.
+     */
     private function getUserInput(string $sessionId, string $websiteId): string
     {
-        // Provide instructions to the user
-        $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
+        $instructionMessage = "Please provide your response:";
 
         // Send the instruction message
         $this->sendMessage($instructionMessage, $sessionId, $websiteId);
 
-        // Initialize user input to an empty string
+      
         $userInput = '';
 
         // Implement logic to wait for the user to send a message
@@ -434,12 +442,12 @@ class CrispService
             }
 
             // Add a short delay to avoid excessive API calls
-            sleep(2); // You can adjust the sleep duration as needed
+            sleep(2);
         }
 
-        // Return the user's input after trimming
         return trim($userInput);
     }
+
 
 
     private function getChirps(string $sessionId, string $websiteId): void
