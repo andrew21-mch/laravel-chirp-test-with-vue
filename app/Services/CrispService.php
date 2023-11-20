@@ -273,7 +273,7 @@ class CrispService
         $bugDetails = [];
 
         while (true) {
-            $userInput = $this->getUserInput($sessionId, $websiteId);
+            $userInput = $this->getUserInput($sessionId, $websiteId, 'Enter details for bug please!');
 
             if (strtolower($userInput) === self::EXIT_COMMAND) {
                 $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
@@ -406,13 +406,11 @@ class CrispService
         $this->sendMessage($message, $sessionId, $websiteId);
     }
 
-    private function getUserInput(string $sessionId, string $websiteId): string
+    private function getUserInput(string $sessionId, string $websiteId, string $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'", int $timeout = 60): string
     {
-        $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
         $this->sendMessage($instructionMessage, $sessionId, $websiteId);
 
         $userInput = '';
-        $timeout = 60;
         $startTime = time();
 
         do {
@@ -432,6 +430,8 @@ class CrispService
 
         return trim($userInput);
     }
+
+
 
 
 
