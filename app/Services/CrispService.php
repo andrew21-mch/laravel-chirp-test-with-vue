@@ -273,40 +273,33 @@ class CrispService
         $bugDetails = [];
 
         while (true) {
-            // Get user input for bug details
             $userInput = $this->getUserInput($sessionId, $websiteId);
 
-            // Check if the user wants to exit the bug reporting process
             if (strtolower($userInput) === self::EXIT_COMMAND) {
                 $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
                 return;
             }
 
-            // Add the user input to bug details
             $bugDetails[] = $userInput;
 
-            // Ask the user for additional details or confirm submission
             $confirmationMessage = "Bug details collected so far:\n" . implode("\n", $bugDetails) . "\n\nType 'exit' to submit the bug report or provide additional details:";
             $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
 
-            sleep(1); // Adjust the sleep duration as needed
+            sleep(1);
 
-            // Wait for user response
             $confirmation = $this->getUserInput($sessionId, $websiteId);
 
-            // Check if the user wants to exit or submit the bug report
             if (strtolower($confirmation) === self::EXIT_COMMAND) {
                 $this->sendMessage("Bug report process has been exited.", $sessionId, $websiteId);
                 break;
             } elseif (empty(trim($confirmation))) {
-                // If the user provides no input, ask for details again
                 $this->sendMessage("Please provide additional details or type 'exit' to submit the bug report:", $sessionId, $websiteId);
             } else {
-                // Continue collecting bug details
                 $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
             }
         }
     }
+
 
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
@@ -415,23 +408,27 @@ class CrispService
 
     private function getUserInput(string $sessionId, string $websiteId): string
     {
-        $this->sendMessage("Please provide your response:", $sessionId, $websiteId);
+        $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'";
+        $this->sendMessage($instructionMessage, $sessionId, $websiteId);
 
         $userInput = '';
+        $timeout = 60;
+        $startTime = time();
 
-        while (true) {
+        do {
             $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
 
             if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
                 $userInput = end($conversationHistory)['content'];
-
-                if (strtolower($userInput) === self::EXIT_COMMAND) {
-                    break;
-                }
             }
 
-            sleep(2);
-        }
+            if (!empty($userInput) || (time() - $startTime) > $timeout) {
+                break;
+            }
+
+            usleep(250000);
+
+        } while (true);
 
         return trim($userInput);
     }
