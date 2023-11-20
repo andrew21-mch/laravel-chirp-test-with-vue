@@ -162,7 +162,7 @@ class CrispService
                     case 'greetings':
                         $this->sendMessage("Hello! I am your assistant, how may I help you?", $sessionId, $websiteId);
                         break;
-                    case 'thanks':
+                    case 'appreciation':
                         $this->sendMessage("You're welcome! If you have more questions...", $sessionId, $websiteId);
                         break;
                     case 'transaction_message':
