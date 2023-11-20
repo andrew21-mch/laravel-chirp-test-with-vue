@@ -475,10 +475,44 @@ class CrispService
     }
     private function handleInquiries(string $sessionId, string $websiteId): void
     {
-        // Respond to inquiries with a simple message
-        $inquiryResponse = "Thank you for your inquiry! Our team will get back to you shortly.";
-        $this->sendMessage($inquiryResponse, $sessionId, $websiteId);
+        // Welcome message
+        $this->sendMessage("Welcome to the inquiries section. How may I assist you?", $sessionId, $websiteId);
+
+        // You can use a loop to continuously handle inquiries
+        while (true) {
+            // Get user input
+            $userInput = $this->getUserInput($sessionId, $websiteId, "Type your inquiry:", 120);
+
+            // Process the user's inquiry
+            $response = $this->processInquiry($userInput);
+
+            // Send the response to the user
+            $this->sendMessage($response, $sessionId, $websiteId);
+
+            // You can add more conditions to exit the loop based on user input
+            if (strtolower($userInput) === 'exit') {
+                $this->sendMessage("Exiting the inquiries section. Have a great day!", $sessionId, $websiteId);
+                break;
+            }
+        }
     }
+
+    private function processInquiry(string $inquiry): string
+    {
+        // Normalize the inquiry (convert to lowercase for case-insensitive comparison)
+        $normalizedInquiry = strtolower($inquiry);
+
+        // Check for specific inquiries related to airtime and data services
+        if (strpos($normalizedInquiry, 'airtime') !== false) {
+            return "For airtime inquiries, you can check your balance, report issues, or purchase airtime. How can I assist you?";
+        } elseif (strpos($normalizedInquiry, 'data') !== false || strpos($normalizedInquiry, 'bundle') !== false) {
+            return "If you have questions about data bundles, I can help with information on available plans, usage, and more. What do you need assistance with?";
+        }
+
+        // For other inquiries, provide a general response
+        return "Thank you for your inquiry. We will get back to you shortly.";
+    }
+
 
     private function handleTransactionMessage(string $sessionId, string $websiteId): void
     {
