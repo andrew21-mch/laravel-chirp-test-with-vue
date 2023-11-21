@@ -174,7 +174,7 @@ class CrispService
                         $this->handleInquiries($sessionId, $websiteId);
                         break;
                     case 'airtime_not_received':
-                        $transactionReporter = new TransactionReporter($this);
+                        $transactionReporter = new TransactionReporter($this, $this->logger);
                         $transactionReporter->reportAirtimeNotReceived($sessionId, $websiteId);
                         break;
 
