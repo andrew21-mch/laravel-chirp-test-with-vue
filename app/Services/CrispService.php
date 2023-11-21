@@ -250,10 +250,10 @@ class CrispService
         $transactionId = $transactionDetails['transaction_id'];
 
         $response = "Transaction details received:
-                    \n## Extrernal ID: $sender
-                    \n## Transaction ID : $transactionId
-                    \n## Amount: $amount
-                    \n## Date: $date";
+                    \n#### Extrernal ID: $sender
+                    \n#### Transaction ID : $transactionId
+                    \n#### Amount: $amount
+                    \n#### Date: $date";
         $this->sendMessage($response, $sessionId, $websiteId);
     }
 
@@ -300,8 +300,7 @@ class CrispService
                 $this->handleBugReport($sessionId, $websiteId);
                 break;
             case '2':
-                $transactionReporter = new TransactionReporter($this, $this->logger);
-                $transactionReporter->reportAirtimeNotReceived($sessionId, $websiteId);
+                $this->reportAirtimeNotReceived($sessionId, $websiteId);
                 break;
             case '3':
                 $this->checkBalance($sessionId, $websiteId);
