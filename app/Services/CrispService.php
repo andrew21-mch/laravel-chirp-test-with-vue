@@ -248,16 +248,16 @@ class CrispService
         $amount = $transactionDetails['amount'];
         $date = $transactionDetails['date'];
         $transactionId = $transactionDetails['transaction_id'];
-    
+
         $response = "Transaction details received:\n"
             . "Extrernal ID: $sender\n"
             . "Transaction ID : $transactionId\n"
             . "Amount: $amount\n"
             . "Date: $date";
-    
+
         $this->sendMessage($response, $sessionId, $websiteId);
     }
-    
+
 
     private function handleFailedTransaction(string $sessionId, string $websiteId): void
     {
@@ -266,7 +266,7 @@ class CrispService
     }
     private function scanMessage(string $message): array
     {
-        $pattern = '/Hello, the transaction with amount (?P<amount>[\d.]+ \w+) for (?P<payment_method>[\w\s]+) \((?P<payment_id>\d+)\) with message: (?P<message>.+?) at (?P<date>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}), reason: (?P<reason>[\w\s.]+) .Please check your balance or contact system admin for more information. Financial Transaction Id: (?P<transaction_id>\d+). External Transaction Id: (?P<external_transaction_id>\d+)./';
+        $pattern = '/Hello, the transaction with amount (?P<amount>\d+ \w+) for (?P<payment_method>[\w\s]+) \((?P<payment_id>\d+)\) with message: (?P<message>.+?) at (?P<date>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}), reason: (?P<reason>[\w\s.]+) .Please check your balance or contact system admin for more information. Financial Transaction Id: (?P<transaction_id>\d+). External Transaction Id: (?P<external_transaction_id>\d+)./';
 
         preg_match($pattern, $message, $matches);
 
@@ -282,14 +282,12 @@ class CrispService
             'external_transaction_id' => 'N/A',
         ];
 
-        // Combine default values with matched values
-        $transactionInfo = array_merge($defaultValues, $matches);
-
-        // Remove the full match from the result
-        unset($transactionInfo[0]);
+        // If there is a match, use the matched values; otherwise, use default values
+        $transactionInfo = $matches ? array_intersect_key($matches, $defaultValues) : $defaultValues;
 
         return $transactionInfo;
     }
+
 
 
     private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId, string $userId = null): void
