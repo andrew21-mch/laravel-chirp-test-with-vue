@@ -306,7 +306,7 @@ class CrispService
             $sender = $transactionDetails['sender'];
             $amount = $transactionDetails['amount'];
             $date = $transactionDetails['date'];
-            $transactionId = $transactionDetails['transactionId'];
+            $transactionId = $transactionDetails['transaction_id'];
 
             $response = "Transaction details received:\n## Sender: $sender\n ## Transaction ID : $transactionId\n## Amount: $amount\n## Date: $date";
             $this->sendMessage($response, $sessionId, $websiteId);
@@ -320,26 +320,31 @@ class CrispService
     // Placeholder for the scanMessage service (replace this with your actual implementation)
     private function scanMessage(string $message): array
     {
-        // Regular expression to extract transaction details
-        $pattern = '/Hello, (?:the transaction with amount|A transaction of) (\d+) XAF by (.+?) \((.+?)\) on your mobile money account successfully completed at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*?Your new balance:(\d+) XAF(?:\. Fee was (\d+) XAF)?.*?Financial Transaction Id: (\d+).*/';
+        $pattern = '/Hello, the transaction with amount (?P<amount>\d+ \w+) for (?P<payment_method>[\w\s]+) \((?P<payment_id>\d+)\) with message: (?P<message>.+?) at (?P<date>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}), reason: (?P<reason>[\w\s.]+) .Please check your balance or contact system admin for more information. Financial Transaction Id: (?P<transaction_id>\d+). External Transaction Id: (?P<external_transaction_id>\d+)./';
 
-        // Initialize variables to store extracted information
-        $matches = [];
-        $result = [];
+        preg_match($pattern, $message, $matches);
 
-        // Perform regular expression matching
-        if (preg_match($pattern, $message, $matches)) {
-            // Extracted information
-            $result['amount'] = $matches[1];
-            $result['transactionType'] = $matches[2];
-            $result['sender'] = $matches[3];
-            $result['date'] = $matches[4];
-            $result['newBalance'] = $matches[5];
-            $result['fee'] = $matches[6] ?? 0; // Use 0 if fee is not present
-            $result['transactionId'] = $matches[7];
-        }
-        return $result;
+        // Provide default values in case of no match
+        $defaultValues = [
+            'amount' => 'N/A',
+            'payment_method' => 'N/A',
+            'payment_id' => 'N/A',
+            'message' => 'N/A',
+            'date' => 'N/A',
+            'reason' => 'N/A',
+            'transaction_id' => 'N/A',
+            'external_transaction_id' => 'N/A',
+        ];
+
+        // Combine default values with matched values
+        $transactionInfo = array_merge($defaultValues, $matches);
+
+        // Remove the full match from the result
+        unset($transactionInfo[0]);
+
+        return $transactionInfo;
     }
+
 
 
 
