@@ -5,11 +5,20 @@ namespace App\Services;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
-class TransactionReporter extends CrispService
+class TransactionReporter
 {
     private Logger $logger;
     private CrispService $crispService;
 
+    public function __construct(CrispService $crispService)
+    {
+        $this->crispService = $crispService;
+    }
+
+    private function sendMessage(string|array $message, string $sessionId, ?string $websiteId = null): void
+    {
+        $this->crispService->sendMessage($message, $sessionId, $websiteId);
+    }
 
     public function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
@@ -37,13 +46,13 @@ class TransactionReporter extends CrispService
                     \n## Transaction ID : $transactionId
                     \n## Amount: $amount
                     \n## Date: $date";
-        $this->crispService->sendMessage($response, $sessionId, $websiteId);
+        $this->sendMessage($response, $sessionId, $websiteId);
     }
 
     private function handleFailedTransaction(string $sessionId, string $websiteId): void
     {
         // Handle a failed transaction
-        $this->crispService->sendMessage("Unable to extract transaction details. Please provide a valid transaction message.", $sessionId, $websiteId);
+        $this->sendMessage("Unable to extract transaction details. Please provide a valid transaction message.", $sessionId, $websiteId);
     }
     private function scanMessage(string $message): array
     {
