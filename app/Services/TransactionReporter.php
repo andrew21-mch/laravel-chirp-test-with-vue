@@ -22,16 +22,22 @@ class TransactionReporter
 
     public function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
-        $userInput = $this->crispService->getUserInput($sessionId, $websiteId, "You have selected 'Report airtime not received'. Please send us your transaction message received from switchn, mtn, orange, or camtel.");
+        try {
+            $userInput = $this->crispService->getUserInput($sessionId, $websiteId, "You have selected 'Report airtime not received'. Please send us your transaction message received from switchn, mtn, orange, or camtel.");
 
-        $transactionDetails = $this->scanMessage($userInput);
+            $transactionDetails = $this->scanMessage($userInput);
 
-        if (!empty($transactionDetails)) {
-            $this->handleSuccessfulTransaction($transactionDetails, $sessionId, $websiteId);
-        } else {
-            $this->handleFailedTransaction($sessionId, $websiteId);
+            if (!empty($transactionDetails)) {
+                $this->handleSuccessfulTransaction($transactionDetails, $sessionId, $websiteId);
+            } else {
+                $this->handleFailedTransaction($sessionId, $websiteId);
+            }
+        } catch (\Exception $e) {
+            // Log or handle the exception as needed
+            $this->logger->error("Error during 'reportAirtimeNotReceived' handling: " . $e->getMessage());
         }
     }
+
 
     private function handleSuccessfulTransaction(array $transactionDetails, string $sessionId, string $websiteId): void
     {
