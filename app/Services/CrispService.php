@@ -20,6 +20,8 @@ class CrispService
     private Logger $logger;
     private const EXIT_COMMAND = 'exit';
 
+    private TransactionReporter $transactionReporter;
+
 
     private string $userId;
 
@@ -27,6 +29,7 @@ class CrispService
     {
         try {
             $this->crispClient = new CrispClient();
+            $this->transactionReporter = new TransactionReporter($this);
             $this->websiteId = config('crisp.website_id');
             $this->crispClient->setTier('plugin');
             $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
