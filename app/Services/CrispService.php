@@ -295,7 +295,7 @@ class CrispService
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
         // Get user input
-        $userInput = $this->getUserInput($sessionId, $websiteId, "You have selected 'Report airtime not received'. Please provide details.");
+        $userInput = $this->getUserInput($sessionId, $websiteId, "You have selected 'Report airtime not received'. please can you send us your transation message received from switchn, mtn, orange or camtel.");
 
         // Scan the message to extract transaction details
         $transactionDetails = $this->scanMessage($userInput);
