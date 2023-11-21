@@ -172,8 +172,10 @@ class CrispService
                         $this->handleInquiries($sessionId, $websiteId);
                         break;
                     case 'airtime_not_received':
-                        $this->reportAirtimeNotReceived($sessionId, $websiteId);
+                        $transactionReporter = new TransactionReporter($this);
+                        $transactionReporter->reportAirtimeNotReceived($sessionId, $websiteId);
                         break;
+
                     case 'bug_report':
                         $this->handleBugReport($sessionId, $websiteId);
                         break;
@@ -219,8 +221,6 @@ class CrispService
     }
 
 
-    // Rest of the code...
-
     private function handleSelectedOption(string $selectedOption, string $sessionId, string $websiteId, string $userId = null): void
     {
         // Implement the logic for handling the selected option.
@@ -231,7 +231,8 @@ class CrispService
                 $this->handleBugReport($sessionId, $websiteId);
                 break;
             case '2':
-                $this->reportAirtimeNotReceived($sessionId, $websiteId);
+                $transactionReporter = new TransactionReporter($this);
+                $transactionReporter->reportAirtimeNotReceived($sessionId, $websiteId);
                 break;
             case '3':
                 $this->checkBalance($sessionId, $websiteId);
@@ -291,64 +292,6 @@ class CrispService
         }
     }
 
-
-    private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
-    {
-        // Get user input
-        $userInput = $this->getUserInput($sessionId, $websiteId, "You have selected 'Report airtime not received'. please can you send us your transation message received from switchn, mtn, orange or camtel.");
-
-        // Scan the message to extract transaction details
-        $transactionDetails = $this->scanMessage($userInput);
-
-        // Check if transaction details were successfully extracted
-        if (!empty($transactionDetails)) {
-            // Access individual details
-            $sender = $transactionDetails['external_transaction_id'];
-            $amount = $transactionDetails['amount'];
-            $date = $transactionDetails['date'];
-            $transactionId = $transactionDetails['transaction_id'];
-
-            $response = "Transaction details received:\n## Extrernal ID: $sender\n ## Transaction ID : $transactionId\n## Amount: $amount\n## Date: $date";
-            $this->sendMessage($response, $sessionId, $websiteId);
-        } else {
-            // If transaction details couldn't be extracted
-            $this->sendMessage("Unable to extract transaction details. Please provide a valid transaction message.", $sessionId, $websiteId);
-        }
-    }
-
-
-    // Placeholder for the scanMessage service (replace this with your actual implementation)
-    private function scanMessage(string $message): array
-    {
-        $pattern = '/Hello, the transaction with amount (?P<amount>\d+ \w+) for (?P<payment_method>[\w\s]+) \((?P<payment_id>\d+)\) with message: (?P<message>.+?) at (?P<date>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}), reason: (?P<reason>[\w\s.]+) .Please check your balance or contact system admin for more information. Financial Transaction Id: (?P<transaction_id>\d+). External Transaction Id: (?P<external_transaction_id>\d+)./';
-
-        preg_match($pattern, $message, $matches);
-
-        // Provide default values in case of no match
-        $defaultValues = [
-            'amount' => 'N/A',
-            'payment_method' => 'N/A',
-            'payment_id' => 'N/A',
-            'message' => 'N/A',
-            'date' => 'N/A',
-            'reason' => 'N/A',
-            'transaction_id' => 'N/A',
-            'external_transaction_id' => 'N/A',
-        ];
-
-        // Combine default values with matched values
-        $transactionInfo = array_merge($defaultValues, $matches);
-
-        // Remove the full match from the result
-        unset($transactionInfo[0]);
-
-        return $transactionInfo;
-    }
-
-
-
-
-
     private function checkBalance($sessionId, $websiteId): void
     {
         // Implement logic to check the user's balance
@@ -365,8 +308,6 @@ class CrispService
 
     private function viewTransactions($sessionId, $websiteId): void
     {
-        // Implement logic to allow the user to view their transaction history
-        // Retrieve and display the user's transaction history
         $this->sendMessage("Here is your transaction history...", $sessionId, $websiteId);
     }
 
