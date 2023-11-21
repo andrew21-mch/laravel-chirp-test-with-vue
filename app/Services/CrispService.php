@@ -303,12 +303,12 @@ class CrispService
         // Check if transaction details were successfully extracted
         if (!empty($transactionDetails)) {
             // Access individual details
-            $sender = $transactionDetails['sender'];
+            $sender = $transactionDetails['external_transaction_id'];
             $amount = $transactionDetails['amount'];
             $date = $transactionDetails['date'];
             $transactionId = $transactionDetails['transaction_id'];
 
-            $response = "Transaction details received:\n## Sender: $sender\n ## Transaction ID : $transactionId\n## Amount: $amount\n## Date: $date";
+            $response = "Transaction details received:\n## Extrernal ID: $sender\n ## Transaction ID : $transactionId\n## Amount: $amount\n## Date: $date";
             $this->sendMessage($response, $sessionId, $websiteId);
         } else {
             // If transaction details couldn't be extracted
