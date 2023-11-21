@@ -266,7 +266,7 @@ class CrispService
     }
     private function scanMessage(string $message): array
     {
-        $pattern = '/Hello, the transaction with amount (?P<amount>\d+ \w+) for (?P<payment_method>[\w\s]+) \((?P<payment_id>\d+)\) with message: (?P<message>.+?) at (?P<date>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}), reason: (?P<reason>[\w\s.]+) .Please check your balance or contact system admin for more information. Financial Transaction Id: (?P<transaction_id>\d+). External Transaction Id: (?P<external_transaction_id>\d+)./';
+        $pattern = '/Hello, the transaction with amount (?P<amount>[\d.]+ \w+) for (?P<payment_method>[\w\s]+) \((?P<payment_id>\d+)\) with message: (?P<message>.+?) at (?P<date>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}), reason: (?P<reason>[\w\s.]+) .Please check your balance or contact system admin for more information. Financial Transaction Id: (?P<transaction_id>\d+). External Transaction Id: (?P<external_transaction_id>\d+)./';
 
         preg_match($pattern, $message, $matches);
 
