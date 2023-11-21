@@ -203,6 +203,7 @@ class CrispService
                 $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
             }
         } catch (\Exception $e) {
+            $this->logger->debug($e->getMessage());
             // Respond with a user-friendly message including the exception details
             $errorMessage = "Oops! Something went wrong. We're sorry, but we are still under development. Details: " . $e->getMessage();
             $this->sendMessage($errorMessage, $sessionId, $websiteId);
