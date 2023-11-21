@@ -233,7 +233,7 @@ class CrispService
                 $this->handleBugReport($sessionId, $websiteId);
                 break;
             case '2':
-                $transactionReporter = new TransactionReporter($this);
+                $transactionReporter = new TransactionReporter();
                 $transactionReporter->reportAirtimeNotReceived($sessionId, $websiteId);
                 break;
             case '3':
