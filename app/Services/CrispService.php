@@ -29,7 +29,6 @@ class CrispService
     {
         try {
             $this->crispClient = new CrispClient();
-            $this->transactionReporter = new TransactionReporter($this);
             $this->websiteId = config('crisp.website_id');
             $this->crispClient->setTier('plugin');
             $this->crispClient->authenticate(config('crisp.api_identifier'), config('crisp.api_key'));
@@ -175,7 +174,7 @@ class CrispService
                         $this->handleInquiries($sessionId, $websiteId);
                         break;
                     case 'airtime_not_received':
-                        $transactionReporter = new TransactionReporter($this);
+                        $transactionReporter = new TransactionReporter();
                         $transactionReporter->reportAirtimeNotReceived($sessionId, $websiteId);
                         break;
 
