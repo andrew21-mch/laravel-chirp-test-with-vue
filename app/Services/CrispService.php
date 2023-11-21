@@ -294,37 +294,54 @@ class CrispService
 
     private function reportAirtimeNotReceived(string $sessionId, string $websiteId): void
     {
-        // Ask the user for more details about the airtime not received issue
-        $this->sendMessage("You have selected 'Report airtime not received'. Please provide more details about the issue. Include any error messages or relevant information you received. Include the amount, transaction ID, sender's number, and receiver's number.", $sessionId, $websiteId);
+        // Get user input
+        $userInput = $this->getUserInput($sessionId, $websiteId, "You have selected 'Report airtime not received'. Please provide details.");
 
-        // Get the user's response
-        $userDetails = $this->getUserInput($sessionId, $websiteId);
+        // Scan the message to extract transaction details
+        $transactionDetails = $this->scanMessage($userInput);
 
-        // Call the scanMessage service to check the payment with the details
-        $scanResult = $this->scanMessage($userDetails);
+        // Check if transaction details were successfully extracted
+        if (!empty($transactionDetails)) {
+            // Access individual details
+            $sender = $transactionDetails['sender'];
+            $amount = $transactionDetails['amount'];
+            $date = $transactionDetails['date'];
+            $transactionId = $transactionDetails['transactionId'];
 
-        // Process the scanResult based on your business logic
-        if ($scanResult) {
-            // Payment details are valid, continue with your logic
-            $confirmationMessage = "Thank you for providing details about the airtime not received issue. We will investigate and get back to you shortly.";
-            $this->sendMessage($confirmationMessage, $sessionId, $websiteId);
+            $response = "Transaction details received:\n## Sender: $sender\n ## Transaction ID : $transactionId\n## Amount: $amount\n## Date: $date";
+            $this->sendMessage($response, $sessionId, $websiteId);
         } else {
-            // Payment details are not valid, inform the user
-            $errorMessage = "The provided payment details are not valid. Please double-check and provide accurate information.";
-            $this->sendMessage($errorMessage, $sessionId, $websiteId);
+            // If transaction details couldn't be extracted
+            $this->sendMessage("Unable to extract transaction details. Please provide a valid transaction message.", $sessionId, $websiteId);
         }
     }
 
+
     // Placeholder for the scanMessage service (replace this with your actual implementation)
-    private function scanMessage(string $userDetails): bool
+    private function scanMessage(string $message): array
     {
-        // Implement your logic to scan the message and check the payment details
-        // This could involve verifying the amount, transaction ID, sender's number, and receiver's number
-        // Return true if the details are valid, false otherwise
-        // You'll need to customize this based on your business requirements
-        // Example: Your logic to validate payment details here...
-        return true;
+        // Regular expression to extract transaction details
+        $pattern = '/Hello, (?:the transaction with amount|A transaction of) (\d+) XAF by (.+?) \((.+?)\) on your mobile money account successfully completed at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*?Your new balance:(\d+) XAF(?:\. Fee was (\d+) XAF)?.*?Financial Transaction Id: (\d+).*/';
+
+        // Initialize variables to store extracted information
+        $matches = [];
+        $result = [];
+
+        // Perform regular expression matching
+        if (preg_match($pattern, $message, $matches)) {
+            // Extracted information
+            $result['amount'] = $matches[1];
+            $result['transactionType'] = $matches[2];
+            $result['sender'] = $matches[3];
+            $result['date'] = $matches[4];
+            $result['newBalance'] = $matches[5];
+            $result['fee'] = $matches[6] ?? 0; // Use 0 if fee is not present
+            $result['transactionId'] = $matches[7];
+        }
+        return $result;
     }
+
+
 
 
     private function checkBalance($sessionId, $websiteId): void
