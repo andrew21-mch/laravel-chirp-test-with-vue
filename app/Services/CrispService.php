@@ -248,14 +248,16 @@ class CrispService
         $amount = $transactionDetails['amount'];
         $date = $transactionDetails['date'];
         $transactionId = $transactionDetails['transaction_id'];
-
-        $response = "Transaction details received:
-                    \n#### Extrernal ID: $sender
-                    \n#### Transaction ID : $transactionId
-                    \n#### Amount: $amount
-                    \n#### Date: $date";
+    
+        $response = "Transaction details received:\n"
+            . "Extrernal ID: $sender\n"
+            . "Transaction ID : $transactionId\n"
+            . "Amount: $amount\n"
+            . "Date: $date";
+    
         $this->sendMessage($response, $sessionId, $websiteId);
     }
+    
 
     private function handleFailedTransaction(string $sessionId, string $websiteId): void
     {
