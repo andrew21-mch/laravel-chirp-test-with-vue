@@ -158,9 +158,9 @@ class CrispService
 
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
                 $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
-            } else if (isset($witData['intents'][0]) && isset($witData['intents'][0]['name'])) {
+            } else if (isset($witData['intents']) && !empty($witData['intents'])) {
                 $intentName = $witData['intents'][0]['name'];
-
+            
                 // Now you can use $intentName in your logic
                 switch ($intentName) {
                     case 'greetings':
