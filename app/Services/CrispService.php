@@ -22,6 +22,8 @@ class CrispService
 
     private TransactionReporter $transactionReporter;
 
+    private bool $exitRequested = false;
+
 
     private string $userId;
 
@@ -337,19 +339,23 @@ class CrispService
 
 
 
+    private function setState(bool $state): void
+    {
+        $this->exitRequested = $state;
+    }
+
     public function handleBugReport(string $sessionId, string $websiteId): void
     {
         $bugDetails = [];
-        $state = true;
+        $this->setState(false);
 
-        while ($state) {
+        while (true) {
             $userInput = $this->getUserInput($sessionId, $websiteId, 'Enter details for bug please!');
 
             if (strtolower(trim($userInput)) == self::EXIT_COMMAND) {
                 $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
-                $state = false;
-                return;
-
+                $this->setState(true); // Set state to exit
+                break;
             } else {
                 $bugDetails[] = $userInput;
 
@@ -359,6 +365,36 @@ class CrispService
                 sleep(1);
             }
         }
+    }
+
+    private function getUserInput(string $sessionId, string $websiteId, string $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'", int $timeout = 60): string
+    {
+        $this->sendMessage($instructionMessage, $sessionId, $websiteId);
+
+        $userInput = '';
+        $startTime = time();
+
+        do {
+            $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
+
+            if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
+                $userInput = end($conversationHistory)['content'];
+
+                // Check for the exit condition
+                if (strtolower(trim($userInput)) === self::EXIT_COMMAND) {
+                    $this->setState(true);
+                }
+            }
+
+            if (!empty($userInput) || (time() - $startTime) > $timeout || $this->exitRequested) {
+                break;
+            }
+
+            usleep(250000);
+
+        } while (true);
+
+        return trim($userInput);
     }
 
     private function checkBalance($sessionId, $websiteId): void
@@ -457,45 +493,6 @@ class CrispService
 
         $this->sendMessage($message, $sessionId, $websiteId);
     }
-
-    private function getUserInput(string $sessionId, string $websiteId, string $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'", int $timeout = 60): string
-    {
-        $this->sendMessage($instructionMessage, $sessionId, $websiteId);
-
-        $userInput = '';
-        $startTime = time();
-        $state = true;
-
-        do {
-            $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
-
-            if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
-                $userInput = end($conversationHistory)['content'];
-
-                // Check for the exit condition
-                if (strtolower(trim($userInput)) === self::EXIT_COMMAND) {
-                    $state = false;
-                }
-            }
-
-            if (!empty($userInput) || (time() - $startTime) > $timeout) {
-                $state = false;
-                break;
-               
-            }
-
-            usleep(250000);
-
-        } while ($state);
-
-        return trim($userInput);
-    }
-
-
-
-
-
-
 
     private function getChirps(string $sessionId, string $websiteId): void
     {
