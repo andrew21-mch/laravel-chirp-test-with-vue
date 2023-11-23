@@ -344,18 +344,17 @@ class CrispService
         $this->exitRequested = $state;
     }
 
-    public function handleBugReport(string $sessionId, string $websiteId): void
+    public function handleBugReport(array $crispWebhookData, string $sessionId, string $websiteId): void
     {
         $bugDetails = [];
-        $this->setState(false);
+        $exitRequested = false;
 
         while (true) {
             $userInput = $this->getUserInput($sessionId, $websiteId, 'Enter details for bug please!');
 
             if (strtolower(trim($userInput)) == self::EXIT_COMMAND) {
                 $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
-                $this->setState(true); // Set state to exit
-                break;
+                $exitRequested = true; // Set exit flag to true
             } else {
                 $bugDetails[] = $userInput;
 
@@ -364,7 +363,15 @@ class CrispService
 
                 sleep(1);
             }
+
+            // Check for the exit condition and exit the loop
+            if ($exitRequested) {
+                break;
+            }
         }
+
+        // Return to the beginning of handleUserInteraction
+        $this->handleUserInteraction($crispWebhookData, $sessionId, $websiteId, '');
     }
 
     private function getUserInput(string $sessionId, string $websiteId, string $instructionMessage = "To search for a user, please type their name or email. Example: 'search John'", int $timeout = 60): string
