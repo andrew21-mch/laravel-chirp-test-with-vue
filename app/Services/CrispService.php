@@ -479,7 +479,9 @@ class CrispService
             }
 
             if (!empty($userInput) || (time() - $startTime) > $timeout) {
+                $state = false;
                 break;
+               
             }
 
             usleep(250000);
