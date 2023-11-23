@@ -160,7 +160,7 @@ class CrispService
             } else if (isset($witData['intents']) && !empty($witData['intents'])) {
                 $intentName = $witData['intents'][0]['name'];
                 $this->logger->debug($witData['intents'][0]['name']);
-            
+
                 // Now you can use $intentName in your logic
                 switch ($intentName) {
                     case 'greetings':
@@ -349,7 +349,7 @@ class CrispService
                 $this->sendMessage("Bug details updated. Type 'exit' to submit the bug report or provide additional details:", $sessionId, $websiteId);
                 $state = false;
                 return;
-            
+
             } else {
                 $bugDetails[] = $userInput;
 
@@ -464,12 +464,18 @@ class CrispService
 
         $userInput = '';
         $startTime = time();
+        $state = true;
 
         do {
             $conversationHistory = $this->crispClient->websiteConversations->getMessages($websiteId, $sessionId);
 
             if (!empty($conversationHistory) && end($conversationHistory)['from'] === 'user') {
                 $userInput = end($conversationHistory)['content'];
+
+                // Check for the exit condition
+                if (strtolower(trim($userInput)) === self::EXIT_COMMAND) {
+                    $state = false;
+                }
             }
 
             if (!empty($userInput) || (time() - $startTime) > $timeout) {
@@ -478,10 +484,11 @@ class CrispService
 
             usleep(250000);
 
-        } while (true);
+        } while ($state);
 
         return trim($userInput);
     }
+
 
 
 
