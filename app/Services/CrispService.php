@@ -154,12 +154,12 @@ class CrispService
             // Decode the JSON response
             $witData = json_decode($response, true);
 
-            $this->logger->debug($witData['intents'][0]['name']);
 
             if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
                 $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
             } else if (isset($witData['intents']) && !empty($witData['intents'])) {
                 $intentName = $witData['intents'][0]['name'];
+                $this->logger->debug($witData['intents'][0]['name']);
             
                 // Now you can use $intentName in your logic
                 switch ($intentName) {
