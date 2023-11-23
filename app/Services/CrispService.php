@@ -156,7 +156,9 @@ class CrispService
 
             $this->logger->debug($witData['intents'][0]['name']);
 
-            if (isset($witData['intents'][0]['name'])) {
+            if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
+                $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
+            } else if (isset($witData['intents'][0]['name'])) {
                 $intentName = $witData['intents'][0]['name'];
 
                 // Now you can use $intentName in your logic
@@ -188,17 +190,15 @@ class CrispService
                         break;
                     // Add more cases as needed for other intents
                     default:
-                        // Check if the user's last message is a numeric option.
-                        if (is_numeric($normalizedMessage) && array_key_exists($normalizedMessage, $options)) {
-                            $this->handleSelectedOption($normalizedMessage, $sessionId, $websiteId, $userId);
-                        } else {
-                            // No recognized intent, ask the user to provide more information
-                            $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
-                        }
+
+                        // No recognized intent, ask the user to provide more information
+                        $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
+
                         break;
                 }
             } else {
-                // No recognized intent, ask the user to provide more information
+                // Check if the user's last message is a numeric option.
+
                 $this->sendMessage("I'm sorry, I didn't understand that. How may I assist you?", $sessionId, $websiteId);
             }
         } catch (\Exception $e) {
