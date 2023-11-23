@@ -342,7 +342,7 @@ class CrispService
         $bugDetails = [];
         $state = true;
 
-        while (true) {
+        while ($state) {
             $userInput = $this->getUserInput($sessionId, $websiteId, 'Enter details for bug please!');
 
             if (strtolower(trim($userInput)) == self::EXIT_COMMAND) {
